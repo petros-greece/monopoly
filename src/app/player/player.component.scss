@@ -1,0 +1,21 @@
+
+.player-container {
+	width: 20px;
+	height: 20px;
+  position: absolute;
+	border-radius: 4px;
+	display: -webkit-box;
+	display: flex;
+	-webkit-box-pack: center;
+	justify-content: center;
+	-webkit-box-align: center;
+	align-items: center;
+	perspective: 800px;
+	-webkit-perspective-origin: top right;
+	perspective-origin: top right;
+}
+
+
+
+
+

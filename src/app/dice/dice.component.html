@@ -1,0 +1,94 @@
+<div style="position: absolute; top: 50%;margin-top: -84px; left: 50%; margin-left: -50px;" >
+  <div class="dice-container" style="transform:scale(.5);">
+    <div id="dice1" class="dice dice-one">
+      <div id="dice-one-side-one" class="dice-side one">
+        <div class="dot one-1"></div>
+      </div>
+      <div id="dice-one-side-two" class="dice-side two">
+        <div class="dot two-1"></div>
+        <div class="dot two-2"></div>
+      </div>
+      <div id="dice-one-side-three" class="dice-side three">
+        <div class="dot three-1"></div>
+        <div class="dot three-2"></div>
+        <div class="dot three-3"></div>
+      </div>
+      <div id="dice-one-side-four" class="dice-side four">
+        <div class="dot four-1"></div>
+        <div class="dot four-2"></div>
+        <div class="dot four-3"></div>
+        <div class="dot four-4"></div>
+      </div>
+      <div id="dice-one-side-five" class="dice-side five">
+        <div class="dot five-1"></div>
+        <div class="dot five-2"></div>
+        <div class="dot five-3"></div>
+        <div class="dot five-4"></div>
+        <div class="dot five-5"></div>
+      </div>
+      <div id="dice-one-side-six" class="dice-side six">
+        <div class="dot six-1"></div>
+        <div class="dot six-2"></div>
+        <div class="dot six-3"></div>
+        <div class="dot six-4"></div>
+        <div class="dot six-5"></div>
+        <div class="dot six-6"></div>
+      </div>
+    </div>
+  </div>
+  <div class="dice-container" style="transform:scale(.5);">
+    <div id="dice2" class="dice dice-two">
+      <div id="dice-two-side-one" class="dice-side one">
+        <div class="dot one-1"></div>
+      </div>
+      <div id="dice-two-side-two" class="dice-side two">
+        <div class="dot two-1"></div>
+        <div class="dot two-2"></div>
+      </div>
+      <div id="dice-two-side-three" class="dice-side three">
+        <div class="dot three-1"></div>
+        <div class="dot three-2"></div>
+        <div class="dot three-3"></div>
+      </div>
+      <div id="dice-two-side-four" class="dice-side four">
+        <div class="dot four-1"></div>
+        <div class="dot four-2"></div>
+        <div class="dot four-3"></div>
+        <div class="dot four-4"></div>
+      </div>
+      <div id="dice-two-side-five" class="dice-side five">
+        <div class="dot five-1"></div>
+        <div class="dot five-2"></div>
+        <div class="dot five-3"></div>
+        <div class="dot five-4"></div>
+        <div class="dot five-5"></div>
+      </div>
+      <div id="dice-two-side-six" class="dice-side six">
+        <div class="dot six-1"></div>
+        <div class="dot six-2"></div>
+        <div class="dot six-3"></div>
+        <div class="dot six-4"></div>
+        <div class="dot six-5"></div>
+        <div class="dot six-6"></div>
+      </div>
+    </div> 
+  </div>
+  <button 
+    mat-raised-button
+    *ngIf="canRoll" 
+    color="primary" 
+    [disabled]="isRolling"
+    (click)="rollDice()" 
+    style="top: 100px;left: 18px;">
+    Roll
+  </button>
+  <button 
+    mat-raised-button
+    *ngIf="!canRoll" 
+    color="primary" 
+    (click)="nextTurnClbk()" 
+    style="top: 100px;left: 4px;">
+    Next Player
+  </button>  
+
+</div>

@@ -1,0 +1,63 @@
+<div fxLayout="column" fxLayoutAlign="center center">
+  <div class="machine">
+    <div class="slots">
+      <ul class="slot" [ngClass]="cls[0]">
+        <li class="number">-</li>
+        <li class="number">+</li>
+        <li class="number">-</li>
+        <li class="number">+</li>
+        <li class="number">-</li>
+        <li class="number">+</li>
+        <li class="number">-</li>
+        <li class="number">+</li>
+        <li class="number">-</li>
+        <li class="number">+</li>
+      </ul>
+      <ul class="slot" [ngClass]="cls[1]">
+        <li class="number">0</li>
+        <li class="number">1</li>
+        <li class="number">2</li>
+        <li class="number">3</li>
+        <li class="number">4</li>
+        <li class="number">5</li>
+        <li class="number">6</li>
+        <li class="number">7</li>
+        <li class="number">8</li>
+        <li class="number">9</li>
+      </ul>
+      <ul class="slot" [ngClass]="cls[2]">
+        <li class="number">0</li>
+        <li class="number">1</li>
+        <li class="number">2</li>
+        <li class="number">3</li>
+        <li class="number">4</li>
+        <li class="number">5</li>
+        <li class="number">6</li>
+        <li class="number">7</li>
+        <li class="number">8</li>
+        <li class="number">9</li>
+      </ul>
+      <ul class="slot" [ngClass]="cls[3]">
+        <li class="number">0</li>
+        <li class="number">1</li>
+        <li class="number">2</li>
+        <li class="number">3</li>
+        <li class="number">4</li>
+        <li class="number">5</li>
+        <li class="number">6</li>
+        <li class="number">7</li>
+        <li class="number">8</li>
+        <li class="number">9</li>
+      </ul>
+    </div>
+  
+  
+  </div>
+
+  <div fxLayout="row" fxLayoutAlign="center center" fxLayoutGap="10px">
+    <button [disabled]="rolled" mat-raised-button class="mat-pink" (click)="rollSlot()">Roll</button>
+    <button mat-raised-button class="mat-pink" (click)="helpers.closeAllDialogs()">
+      {{ !rolled ? 'Sorry I don\'t gamble' : 'Close' }}
+    </button>
+  </div>
+</div>

@@ -1,0 +1,186 @@
+::ng-deep.mat-menu-panel {
+  max-width: none !important;
+}
+
+.my-badge{
+  background: black;
+  width: 40px;
+  height: 40px;
+  text-align: center; 
+  border-radius: 50%;
+  line-height: 40px;
+  font-weight: 500;
+}
+
+.board-lg{
+  $cardWidth: 70px;
+  .monopoly-table{
+    .tile{
+      width: $cardWidth;
+      position: absolute;
+      white-space: nowrap;
+      text-align: center;
+      font-size: 1rem;
+    }
+  }
+  .rotate-none{
+      left: 0px;
+      top: 0px;
+  }
+  .rotate-left{
+    transform: rotate(-90deg);
+    left: -1.55rem;
+    bottom: 1.55rem;
+  }
+  .rotate-right{
+    transform: rotate(90deg);
+    right: -1.6rem;
+    top: 1.55rem;
+  }
+  .monopoly-table td{
+    width: $cardWidth;
+  }
+  .monopoly-table tr:not(:first-child):not(:last-child) td{
+    height: $cardWidth !important; 
+  }
+  .monopoly-table tr td:first-child,
+  .monopoly-table tr td:last-child {
+    width: $cardWidth+10;
+    border: 1px solid grey;
+  }
+  .monopoly-table tr:first-child td,
+  .monopoly-table tr:last-child td{
+    height: $cardWidth+10; 
+    border: 1px solid grey;
+  }
+
+  
+}
+
+.board-sm{
+  $cardWidth: 34px;
+  .monopoly-table{
+    .tile{
+      width: $cardWidth;
+      position: absolute;
+      white-space: nowrap;
+      text-align: center;
+      font-size: .6rem;
+      overflow: hidden;
+    }
+  }
+  .rotate-none{
+      left: 0px;
+      top: 0px;
+  }
+  .rotate-left{
+    transform: rotate(-90deg);
+    left: -0.5rem;
+    bottom: 0.45rem;
+  }
+  .rotate-right{
+    transform: rotate(90deg);
+    right: -0.5rem;
+    top: 0.45rem;
+  }
+  .monopoly-table td{
+    width: $cardWidth;
+  }
+  .monopoly-table tr:not(:first-child):not(:last-child) td{
+    height: $cardWidth !important; 
+  }
+  .monopoly-table tr td:first-child,
+  .monopoly-table tr td:last-child {
+    width: $cardWidth+6;
+    border: 1px solid grey;
+  }
+  .monopoly-table tr:first-child td,
+  .monopoly-table tr:last-child td{
+    height: $cardWidth+6; 
+    border: 1px solid grey;
+  }
+}
+
+.rotate-180{
+  transform: rotate(180deg);
+  right: 0px;
+  bottom: 0px; 
+}
+.rotate-135{
+  transform: rotate(135deg);
+}
+.rotate-230{
+  transform: rotate(230deg);
+}
+.rotate-315{
+  transform: rotate(315deg);
+}
+.monopoly-table{
+  border-collapse: collapse;
+}
+
+.monopoly-cell{
+  cursor: pointer;
+}
+.monopoly-cell:hover{
+  background: rgba(255, 255, 0, .3) !important;
+}
+
+
+
+
+.cell-info-popup{
+  position: absolute;
+  z-index: 9999;
+  font-size:2rem;
+  background:rgba(255,0,0,.7);
+  width: 100px; 
+  padding: 10px 0 10px 0;
+  text-align:center;
+  left: 50%;
+  margin-left: -50px;
+}
+
+
+.animated {
+  -webkit-animation-duration: 1s;
+  animation-duration: 1s;
+  -webkit-animation-fill-mode: both;
+  animation-fill-mode: both;
+  //-webkit-animation-iteration-count: infinite;
+  //animation-iteration-count: infinite;
+}
+
+/* Zooming entrances */
+@-webkit-keyframes zoomIn {
+  from {
+    opacity: 0;
+    -webkit-transform: scale3d(0.3, 0.3, 0.3);
+    transform: scale3d(0.3, 0.3, 0.3);
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+@keyframes zoomIn {
+  from {
+    opacity: 0;
+    -webkit-transform: scale3d(0.3, 0.3, 0.3);
+    transform: scale3d(0.3, 0.3, 0.3);
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+.zoomIn {
+  -webkit-animation-name: zoomIn;
+  animation-name: zoomIn;
+}
+
+
+
+
+
+
