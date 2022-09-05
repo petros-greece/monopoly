@@ -58,6 +58,9 @@ export class AppComponent implements OnInit{
     passFromStartMoney: 200
   }
 
+
+
+
   players = [
     {
       color: 'red',
@@ -66,7 +69,8 @@ export class AppComponent implements OnInit{
       cls: 'player-position-00',
       cards: {},
       money: this.game.initMoney,
-      looseNextTurn: false
+      looseNextTurn: false,
+      isActive: false,
     },
     {
       color: 'lime',
@@ -75,7 +79,8 @@ export class AppComponent implements OnInit{
       cls: 'player-position-00',
       cards: {},
       money: this.game.initMoney,
-      looseNextTurn: false
+      looseNextTurn: false,
+      isActive: false
     },
     {
       color: 'cyan',
@@ -84,7 +89,8 @@ export class AppComponent implements OnInit{
       cls: 'player-position-00',
       cards: {},
       money: this.game.initMoney,
-      looseNextTurn: false
+      looseNextTurn: false,
+      isActive: false
     },
     {
       color: 'fuchsia',
@@ -93,7 +99,8 @@ export class AppComponent implements OnInit{
       cls: 'player-position-00',
       cards: {},
       money: this.game.initMoney,
-      looseNextTurn: false
+      looseNextTurn: false,
+      isActive: false
     },    
   ];
 
@@ -151,15 +158,26 @@ export class AppComponent implements OnInit{
  
   }
  
-  ngOnInit(): void {
+  async ngOnInit() {
     this.resizeBoard();
     this.calculateBuildingPrices();
     setTimeout(()=>{
       this.mainMenuTrigger.openMenu();
+      
     }, 10); 
-    
-   this.monopolyInterval();
 
+    this.renderDice(3,5);
+    await this.emitPlayerMove(1, 8);
+    // await this.emitPlayerMove(1, 12);
+
+    //     await this.emitPlayerMove(2, 12);
+    //     await this.emitPlayerMove(1, 12);
+
+//db timestamp
+      //  [hjk]
+
+   this.monopolyInterval();
+   
 
   }
 
@@ -220,7 +238,7 @@ export class AppComponent implements OnInit{
         return;
       }
       // give next player index
-      if(this.game.currentPlayer < 3){
+      if( this.game.currentPlayer < (this.players.length-1) ){
         this.game.currentPlayer+=1;
       }
       else{
@@ -230,7 +248,7 @@ export class AppComponent implements OnInit{
       if(this.players[this.game.currentPlayer].looseNextTurn){
         this.players[this.game.currentPlayer].looseNextTurn = false;
         this.game.currentPlayer+=1;
-        if(this.game.currentPlayer > 3){
+        if( this.game.currentPlayer > (this.players.length-1) ){
           this.game.currentPlayer = 0;
         }
       }
@@ -262,7 +280,7 @@ export class AppComponent implements OnInit{
   }
 
   movePlayer(e: any){
-    let num = e.diceOne+e.diceTwo;
+    let num = 9//e.diceOne+e.diceTwo;
     let counter = 0;
     let ind = this.game.currentPlayer;
     let player = this.players[ind];
@@ -524,7 +542,45 @@ export class AppComponent implements OnInit{
     this.players[this.game.currentPlayer].money-= cost;
   }
 
+  //emittedEvents{roomId:number type:string player:number info:any}
 
+  /** EMIT EVENTS *******************************************/
+
+  async emitPlayerMove(playerIndex: number, diceTotal: number){
+    let counter = 0;
+    let player = this.players[playerIndex];
+    //move Interval
+    return new Promise((resolve, reject) => {
+      this.playerInterval = setInterval(()=>{
+        player.position+=1;
+        //reached the start
+        if( player.position > 27){
+          this.showCellAnimation('00', `+${this.game.passFromStartMoney}`, 'rgba(0,128,0,.5)');
+          player.position = 0;
+          //@todo decide what to do with the money
+          //player.money+= this.game.passFromStartMoney;
+        }
+        //give player position until he finishes
+        player.cls = this.UI.playerClsPrefix+this.UI.blocks[player.position];
+        counter+=1;
+        if(counter >= diceTotal){
+          clearInterval(this.playerInterval);
+          //@todo decide what to show
+          //this.checkBoardBlock();
+          resolve('emitPlayerMoveFinished');
+        }
+      //@todo should be a little faster so the gap between requests closes
+      }, 100);
+    });
+
+  }
+
+  renderDice(diceOne:number, diceTwo: number) {
+    let elDiceOne = document.getElementById('dice1');
+    let elDiceTwo = document.getElementById('dice2');
+    elDiceOne.classList.add('show-' + diceOne);
+    elDiceTwo.classList.add('show-' + diceTwo);
+  }
 
 
 }

@@ -41,12 +41,13 @@ export class DiceComponent implements OnInit {
     } 
 
     setTimeout(()=>{
-      let num = diceOne+diceTwo;
       this.isRolling = false;
       this.onDiceTotal.emit({'diceOne': diceOne, 'diceTwo': diceTwo});
     },500);
       
   }
+
+
 
   nextTurnClbk(){
     this.onNextTurnClbk.emit();
