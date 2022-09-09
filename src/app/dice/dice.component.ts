@@ -11,7 +11,8 @@ export class DiceComponent implements OnInit {
   elDiceTwo:any;
   isRolling = false;
 
-  @Input()        canRoll: boolean;  
+  @Input() canRoll: boolean;  
+  @Input() isCurrentPlayer: boolean; 
   @Output("onDiceTotal") public onDiceTotal: EventEmitter<any> = new EventEmitter<any>();
   @Output("onNextTurnClbk") public onNextTurnClbk: EventEmitter<number> = new EventEmitter<number>();
 

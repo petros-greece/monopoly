@@ -19,16 +19,16 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
     opacity: 1;
   } 
   .front {
-    transform: translateZ($player-width/2);
+    transform: translateZ($player-width / 2);
   }
   .back { 
-    transform: rotateY(180deg) translateZ($player-width/2); 
+    transform: rotateY(180deg) translateZ($player-width / 2); 
   }
   .left { 
-    transform: rotateY(90deg) translateZ($player-width/2);
+    transform: rotateY(90deg) translateZ($player-width / 2);
   }
   .right { 
-    transform: rotateY(-90deg) translateZ($player-width/2);
+    transform: rotateY(-90deg) translateZ($player-width / 2);
   }
   .top{
     width: $player-width;
@@ -121,13 +121,85 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
   @include calculateDistances(0px, 269px, 269px, 0px, 43px, 37px);
 }
 
+.board-lg{
+  .building-container{
+    position: absolute;
+    width: 28px;
+    height: 29px;
+    background: grey;
+    box-shadow: 1px 1px 4px #fffb0f;
+  }
+  .building-inner{
+    position: relative;
+    width: 26px;
+    height: 26px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    &.building-1{
+      background-image: url("./assets/images/house.png");
+    }
+    &.building-2{
+      background-image: url("./assets/images/scycraper.png");
+    }
+  }
+  .building-top{
+    top: 83px;
+    left: 23px;
+  }
+  .building-left{
+    left: 84px;
+    top: 20px;
+  }
+  .building-bottom{
+    left: 20px;
+    top: -30px;
+  }
+  .building-right{
+    top: 20px;
+    left: -30px;
+  }
+  
+}
 
-
-
-
-
-
-
+.board-sm{
+  .building-container{
+    position: absolute;
+    width: 16px;
+    height: 15px;
+    background: grey;
+    box-shadow: 1px 1px 4px #fffb0f;
+  }
+  .building-inner{
+    position: relative;
+    width: 15px;
+    height: 15px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    &.building-1{
+      background-image: url("./assets/images/house.png");
+    }
+    &.building-2{
+      background-image: url("./assets/images/scycraper.png");
+    }
+  }
+  .building-top{
+    top: 41px;
+    left: 9px;
+  }
+  .building-left{
+    left: 42px;
+    top: 10px;
+  }
+  .building-bottom{
+    left: 9px;
+    top: -17px;
+  }
+  .building-right{
+    top: 11px;
+    left: -18px;
+  }
+  
+}
 
 
 

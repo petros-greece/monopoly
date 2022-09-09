@@ -21,6 +21,10 @@ export class HelpersService {
 
   /** GENERAL ******************************************************************************/
  
+  pause(ms: number) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
   giveTonesRegEx(str:string){
     return str.
         replace(/α|ά/ig, '(α|ά)').

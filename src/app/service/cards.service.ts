@@ -141,6 +141,7 @@ export class CardsService {
     },        
   ];
 
+
   giveChanceCard(){
     let max  = this.chanceCards.length;
     let rand = Math.floor(Math.random()*max);

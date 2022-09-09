@@ -12,6 +12,9 @@ import { DiceComponent } from './dice/dice.component';
 import { PlayerComponent } from './player/player.component';
 import { BuildingComponent } from './building/building.component';
 import { SlotMachineComponent } from './slot-machine/slot-machine.component';
+import { EnterGameComponent } from './enter-game/enter-game.component';
+
+import { GamePipesModule } from './pipes/game-pipes.module';
 
 @NgModule({
   declarations: [
@@ -19,7 +22,8 @@ import { SlotMachineComponent } from './slot-machine/slot-machine.component';
     DiceComponent,
     PlayerComponent,
     BuildingComponent,
-    SlotMachineComponent
+    SlotMachineComponent,
+    EnterGameComponent
   ],
   imports: [
     BrowserModule,
@@ -28,8 +32,10 @@ import { SlotMachineComponent } from './slot-machine/slot-machine.component';
     ToastrModule.forRoot(),
     DialogModule,
     MaterialModule,
-    FormsModule
+    FormsModule,
+    GamePipesModule
   ],
+  exports: [GamePipesModule],
   providers: [],
   bootstrap: [AppComponent]
 })

@@ -2,6 +2,7 @@ import { Component, OnInit, ViewChild, TemplateRef, HostListener, AfterViewInit 
 import { MatMenuTrigger } from '@angular/material/menu';
 import { CardsService } from './service/cards.service';
 import { HelpersService } from './service/helpers.service';
+import { BoardTurnI, GameI, MonopolyService } from './service/monopoly-api.service';
 
 @Component({
   selector: 'app-root',
@@ -15,6 +16,8 @@ export class AppComponent implements OnInit{
   @ViewChild('chestAndChanceTmpl', {static: true}) chestAndChanceTmpl: TemplateRef<any>;
   @ViewChild('casinoTmpl', {static: true}) casinoTmpl: TemplateRef<any>;  
   @ViewChild('countryInfoTmpl', {static: true}) countryInfoTmpl: TemplateRef<any>;
+  @ViewChild('enterGameTmpl', {static: true}) enterGameTmpl: TemplateRef<any>;
+  
   @ViewChild('mainMenuTrigger') mainMenuTrigger: MatMenuTrigger;
 
   @HostListener('window:resize', ['$event'])
@@ -41,6 +44,7 @@ export class AppComponent implements OnInit{
     blocks: [ '00', '01', '02', '03', '04', '05', '06', '07', '17', '27', '37', '47', '57', '67', '77', '76', '75', '74', '73', '72', '71', '70', '60', '50', '40', '30', '20', '10' ], 
     currentBlock: '00',
     selectedBlock:<any> {},
+    selectedBlockIndex: -1,
     card:<any> {},
     continents: [
       {name: 'Africa', cls: 'mat-brown'}, 
@@ -51,18 +55,27 @@ export class AppComponent implements OnInit{
   };
 
   game = {
-    totalPlayers: 0,
     currentPlayer: 0,
     playAgain: false,
     initMoney: 1000,
-    passFromStartMoney: 200
+    passFromStartMoney: 200,
+    turn: 0,
+    id: 1,
   }
 
+  boardTurn:any = {};
 
+  emittedEvents = {
+    diceRoll: false,
+    turnEvents: false
+  };
 
+  turnEmitedEvents = [];
+  myPlayerIndex: number;
 
   players = [
     {
+      name: 'Player 1',
       color: 'red',
       areaBg: 'rgba(255,0,0,.4)',
       position: 0,
@@ -73,6 +86,7 @@ export class AppComponent implements OnInit{
       isActive: false,
     },
     {
+      name: 'Player 2',      
       color: 'lime',
       areaBg: 'rgba(0, 255, 0, .2)',
       position: 0,
@@ -83,6 +97,7 @@ export class AppComponent implements OnInit{
       isActive: false
     },
     {
+      name: 'Player 3',
       color: 'cyan',
       areaBg: 'rgba(0, 255, 255, .2)',
       position: 0,
@@ -93,6 +108,7 @@ export class AppComponent implements OnInit{
       isActive: false
     },
     {
+      name: 'Player 4',
       color: 'fuchsia',
       areaBg: 'rgba(255, 0, 255,.2)',
       position: 0,
@@ -118,7 +134,7 @@ export class AppComponent implements OnInit{
     '07': { type: 'edge',          continent: '',         verb: 'Jail',              img: './assets/images/jail.png',           cost: 0,   ownedBy: -1, cls: '' },
     
     '17': { type: 'country',       continent: 'Europe',   verb: 'Italy',             img: '',                                   cost: 50,  ownedBy: -1, cls: 'rotate-right mat-red', buildCls: 'building-right' },
-    '27': { type: 'casino',        continent: '',         verb: 'Bellagio',            img: './assets/images/casino.png',         cost: 0,   ownedBy: -1, cls: 'rotate-right' },
+    '27': { type: 'casino',        continent: '',         verb: 'Bellagio',            img: './assets/images/casino.png',       cost: 0,   ownedBy: -1, cls: 'rotate-right' },
     '37': { type: 'country',       continent: 'Europe',   verb: 'France',            img: '',                                   cost: 70,  ownedBy: -1, cls: 'rotate-right mat-red', buildCls: 'building-right' },
     '47': { type: 'country',       continent: 'Europe',   verb: 'England',           img: '',                                   cost: 70,  ownedBy: -1, cls: 'rotate-right mat-red', buildCls: 'building-right' },
     '57': { type: 'railroad',      continent: 'Railroal', verb: 'Frankfurt Station', img: './assets/images/railroad.png',       cost: 100, ownedBy: -1, cls: 'rotate-right' },  
@@ -136,7 +152,7 @@ export class AppComponent implements OnInit{
     '70': { type: 'edge',          continent: '',         verb: 'Go to Jail',        img: './assets/images/go-to-jail.png',     cost: 0,   ownedBy: -1, cls: 'rotate-230' },     
     
     '60': { type: 'country',       continent: 'America',  verb: 'Mexico',            img: '',                                   cost: 60,  ownedBy: -1, cls: 'rotate-left mat-blue', buildCls: 'building-left' },
-    '50': { type: 'casino',        continent: '',         verb: 'Estoril',            img: './assets/images/casino.png',         cost: 0,   ownedBy: -1, cls: 'rotate-left' }, 
+    '50': { type: 'casino',        continent: '',         verb: 'Estoril',            img: './assets/images/casino.png',        cost: 0,   ownedBy: -1, cls: 'rotate-left' }, 
     '40': { type: 'country',       continent: 'America',  verb: 'Canada',            img: '',                                   cost: 55, ownedBy: -1, cls: 'rotate-left mat-blue', buildCls: 'building-left' }, 
     '30': { type: 'country',       continent: 'America',  verb: 'Brazil',            img: '',                                   cost: 75, ownedBy: -1, cls: 'rotate-left mat-blue', buildCls: 'building-left' }, 
     '20': { type: 'railroad',      continent: 'Railroal', verb: 'Toronto Union Station',img: './assets/images/railroad.png',    cost: 150,ownedBy: -1, cls: 'rotate-left' }, 
@@ -151,7 +167,8 @@ export class AppComponent implements OnInit{
 
   constructor(
     public helpers: HelpersService,
-    public cardsService: CardsService
+    public cardsService: CardsService,
+    public apiService: MonopolyService
     ){
     
 
@@ -159,29 +176,88 @@ export class AppComponent implements OnInit{
   }
  
   async ngOnInit() {
+    this.openEnterGameDialog();
+    //await this.apiService.createGame(this.newGameForm);
+
+    //this.apiService.addPlayerToGame('petros', 1);
+
+
+
+
+    // console.log(this.boardTurn.id);
+    // this.apiService.addPlayerToGame({'sistine1': 'chapel'})
+    // this.apiService.addPlayerToGame({'sistine2': 'chapel'})
+    // this.apiService.addPlayerToGame({'sistine3': 'chapel'})
+    // this.apiService.addPlayerToGame({'sistine4': 'chapel'})
+
     this.resizeBoard();
     this.calculateBuildingPrices();
+
     setTimeout(()=>{
-      this.mainMenuTrigger.openMenu();
-      
+      //this.mainMenuTrigger.openMenu();
     }, 10); 
 
-    this.renderDice(3,5);
-    await this.emitPlayerMove(1, 8);
-    // await this.emitPlayerMove(1, 12);
+    //this.renderGameFromHistory(1);
 
-    //     await this.emitPlayerMove(2, 12);
-    //     await this.emitPlayerMove(1, 12);
-
-//db timestamp
-      //  [hjk]
-
-   this.monopolyInterval();
+    // this.monopolyInterval();
    
+    //this.enterGame(2);
 
   }
 
+  /** BEFORE  ************************/
+
+  filterPlayers(players:any[]):any[]{
+    return players.filter((p:any)=>{
+      return p.isActive;
+    });
+  }
+
+  openEnterGameDialog(){
+    this.helpers.openDialog({
+      headerText: `Monopoly`,
+      template: this.enterGameTmpl,
+    });
+  }
+
+  async checkBoardPlayers() : Promise<GameI>{
+    this.helpers.showToastrInfo('Waiting for other players to enter', '', {timeOut: 4000, easing: 'ease-in-out'});
+    let res = await this.apiService.getGameInfo(this.game.id);
+    let names = JSON.parse(res.players);
+    for(let i = 0, len = names.length; i < len; i+=1){
+      this.players[i].isActive = true;
+      this.players[i].name = names[i];
+    }
+    return res;    
+  }
+
+  async enterGame(e:{gameId: number, playerIndex: number}){
+    this.helpers.closeAllDialogs();
+    this.myPlayerIndex = e.playerIndex;
+    this.game.id = e.gameId;
+    let res = await this.checkBoardPlayers();
+    this.playerInterval = setInterval(async()=>{
+      res = await this.checkBoardPlayers();
+      if( res['has_started'] ){
+        clearInterval(this.playerInterval);
+        //only the current user creates a new board turn which will be emitted to other players
+        if(this.game.currentPlayer === this.myPlayerIndex){
+          let boardTurn = await this.apiService.newBoardTurn(res.id, 0);
+          this.boardTurn.id = boardTurn.id;
+        }
+        this.monopolyInterval();
+      } 
+    }, 1000);
+  }
+ 
   /** ΙΝΙΤ ************************/
+
+  restartEmittedEvents(){
+    this.emittedEvents = {
+      diceRoll: false,
+      turnEvents: false
+    };
+  }
 
   private calculateBuildingPrices(){
     for(let prop in this.board){
@@ -200,7 +276,15 @@ export class AppComponent implements OnInit{
         this.board[prop].tripCost = Math.ceil(cost/4);
       }    
     }
-    console.log(this.board);
+    //console.log(this.board);
+    let map = (this.UI.blocks).map((item:any) => {
+      return {
+        ownedBy: this.board[item].ownedBy,
+        building: this.board[item].building
+      }
+    })
+    
+
   }
 
   resizeBoard(){
@@ -215,45 +299,88 @@ export class AppComponent implements OnInit{
     else if(w < 501){ this.UI.size = 1.3; }
   }
 
+
   monopolyInterval(){
-    this.gameInterval = setInterval(()=>{
+    this.gameInterval = setInterval(async()=>{
+
+      console.log('monopolyInterval');
+      console.log('this:', this.boardTurn['player_index'], 'my:', this.myPlayerIndex);
+      
+      //if is not me render the the emitted events
+      if(this.game.currentPlayer !== this.myPlayerIndex){
+        let boardTurn = await this.getAndRenderBoardTurn( this.game.id );
+        
+        //this happens when the turn changes
+        if( this.boardTurn.id && (parseInt(this.boardTurn.id) !== boardTurn.id) ){
+          console.log('this2:', this.boardTurn['player_index'], 'my2:', this.myPlayerIndex);
+          await this.getAndRenderBoardTurn(this.game.id, boardTurn.id);
+          // if(boardTurn['player_index'] !== this.myPlayerIndex){
+          //   console.log('this3:', this.boardTurn['player_index'], 'my3:', this.myPlayerIndex);
+          //  // await this.getAndRenderBoardTurn(this.game.id, boardTurn.id);
+          // }
+          this.restartEmittedEvents();
+        }
+
+        this.boardTurn = boardTurn;
+        this.game.currentPlayer = this.boardTurn['player_index'];
+        
+      }
       this.UI.timer-=1;
       if(this.UI.timer <= 0){
-        this.UI.timer = 30;
-        this.nextTurn();
+        this.UI.timer = 30; 
+        //this.nextTurn();
       }
-    }, 1000);
+    }, 3000);
   }
 
   /** PLAYER TURN AND MOVEMENT *****************/
 
+  findNextPlayerToPlay(){
+    let foundAscPlayer = false;
+    while( (this.game.currentPlayer < (this.players.length-1)) && !foundAscPlayer){
+      let player = this.players[this.game.currentPlayer+1];
+      this.game.currentPlayer+=1; 
+      if(player.isActive && !player.looseNextTurn){
+        foundAscPlayer = true;
+      }
+      else if(player.isActive && player.looseNextTurn){
+        player.looseNextTurn = false;
+      }
+    }
+    if(!foundAscPlayer){
+      this.game.currentPlayer = 0;
+    }
+  }
+
   //Emitted after the next button clicked and also when the time ends
-  nextTurn(){
+  async nextTurn(){
+      console.log('Change Turn');
       this.UI.canRoll = true;
       this.UI.timer = 30;
       
-      //if the player is marked to play again, unmark him and stop here
+      //if the player is marked to play again, unmark him and stop here only if he didn go to jail
       if(this.game.playAgain){
         this.game.playAgain = false;
-        return;
-      }
-      // give next player index
-      if( this.game.currentPlayer < (this.players.length-1) ){
-        this.game.currentPlayer+=1;
-      }
-      else{
-        this.game.currentPlayer = 0;
-      }
-      //if has looses turn flag, unflag him and move to the next
-      if(this.players[this.game.currentPlayer].looseNextTurn){
-        this.players[this.game.currentPlayer].looseNextTurn = false;
-        this.game.currentPlayer+=1;
-        if( this.game.currentPlayer > (this.players.length-1) ){
-          this.game.currentPlayer = 0;
+        if(!this.players[this.game.currentPlayer].looseNextTurn){
+          let boardTurn = await this.apiService.newBoardTurn(this.game.id, this.game.currentPlayer);
+          this.boardTurn.id = boardTurn.id;
+          return;
         }
       }
+   
+      //give next player index
+      this.findNextPlayerToPlay();
+      
+      //if has 'loose turn' flag, unflag him and move to the next
+      //this only happens when we reach to the end and the first player is
+      //flagged as loose their turn
+      if(this.players[this.game.currentPlayer].looseNextTurn){
+        this.players[this.game.currentPlayer].looseNextTurn = false;
+        this.findNextPlayerToPlay();
+      }
       this.helpers.closeAllDialogs();
-
+      await this.emitTurnDataAndAddNewTurn();
+      await this.helpers.pause(500);
   }
 
   //helper
@@ -269,24 +396,28 @@ export class AppComponent implements OnInit{
 
   }
 
-  moveTo(position:number, collectFromStart:boolean){
-    let player = this.players[this.game.currentPlayer];
+  moveTo(position:number, collectFromStart:boolean, playerIndex = -1){
+    let index = (playerIndex > -1) ? playerIndex : this.game.currentPlayer;
+    let player = this.players[index];
     if(collectFromStart && player.position > position){
       player.money+= this.game.passFromStartMoney;
     }
     player.position = position;
     player.cls = this.UI.playerClsPrefix+this.UI.blocks[player.position];
-    this.checkBoardBlock();
+    if(playerIndex === -1){ this.checkBoardBlock(); }
   }
 
-  movePlayer(e: any){
-    let num = 9//e.diceOne+e.diceTwo;
+  //emitted
+  async movePlayer(e: any){
+    let num = e.diceOne+e.diceTwo;
     let counter = 0;
     let ind = this.game.currentPlayer;
     let player = this.players[ind];
     this.UI.canRoll = false;
     //if is the second/third... time to play in the row restart timer
+    //also finalize turn data
     if(this.game.playAgain){
+      await this.emitTurnDataAndAddNewTurn();
       this.UI.timer = 30;
     }
 
@@ -300,6 +431,11 @@ export class AppComponent implements OnInit{
       this.game.playAgain = false;
     }
 
+    //no need for if just for safety measurements
+    if(this.game.currentPlayer === this.myPlayerIndex){
+      await this.apiService.addDiceToBoardTurn(this.boardTurn.id, { d1: e.diceOne , d2: e.diceTwo });
+    }
+    
     //move Interval
     this.playerInterval = setInterval(()=>{
       player.position+=1;
@@ -316,19 +452,22 @@ export class AppComponent implements OnInit{
         clearInterval(this.playerInterval);
         this.checkBoardBlock();
       }
-    }, 100);
+    }, 500);
+
   }
 
 
   /** BLOCK SPECIFIC ACTIONS *****************/
 
-  private goToJail(){
-    let player = this.players[this.game.currentPlayer];
+  //emitted  
+  private goToJail(playerIndex = -1){
+    let player = (playerIndex > -1) ? this.players[playerIndex] : this.players[this.game.currentPlayer];
     this.helpers.showToastrError('Jailed! You miss next turn!');
     this.UI.currentBlock = '07';
     player.cls = this.UI.playerClsPrefix+'07';
     player.position = 7;
     player.looseNextTurn = true;
+    this.turnEmitedEvents.push( { jail: true } );
   }
 
   private openChestAndChanceDialog(){
@@ -347,24 +486,24 @@ export class AppComponent implements OnInit{
     });
   }
 
-  private collectMoneyFromAll(){
+  private collectMoneyFromAll(card:any = {}, playerIndex = -1){
     //@todo filter out finished players (no money)
     let len = this.players.length;
-    let money = this.UI.card.money;
-    let current = this.game.currentPlayer;
+    let money = card.money ? card.money : this.UI.card.money;
+    let current = playerIndex > -1 ? playerIndex : this.game.currentPlayer;
     for(let i=0; i < len; i+=1){
-        if(i !== current){
+      if(i !== current){
         this.players[i].money-= money;
-        }
+      }
     }
     this.players[current].money+= money*(len-1);
   }
 
-  private giveMoneyToAll(){
+  private giveMoneyToAll(card:any = {}, playerIndex = -1){
     //@todo filter out finished players (no money)
     let len = this.players.length;
-    let money = this.UI.card.money;
-    let current = this.game.currentPlayer;
+    let money = card.money ? card.money : this.UI.card.money;
+    let current = playerIndex > -1 ? playerIndex : this.game.currentPlayer;
     for(let i=0; i < len; i+=1){
         if(i !== current){
           this.players[i].money+= money;
@@ -373,46 +512,48 @@ export class AppComponent implements OnInit{
     this.players[current].money-= money*(len-1);
   }
 
-  private payChanceOrCommunity(){
+  private payChanceOrCommunity(card:any = {}, playerIndex = -1){
     //@todo filter out finished players (no money)
-    let money = this.UI.card.money;
-    let current = this.game.currentPlayer;
+    let money = card.money ? card.money : this.UI.card.money;
+    let current = playerIndex > -1 ? playerIndex : this.game.currentPlayer;
     this.players[current].money-= money;
   }
 
-  private collectFromChanceOrCommunity(){
+  private collectFromChanceOrCommunity(card:any = {}, playerIndex = -1){
     //@todo filter out finished players (no money)
-    let money = this.UI.card.money;
-    let current = this.game.currentPlayer;
+    let money = card.money ? card.money : this.UI.card.money;
+    let current = playerIndex > -1 ? playerIndex : this.game.currentPlayer;
     this.players[current].money+= money;   
   }
 
-  doActionForChanceOrCommunity(){
+  //emitted
+  doActionForChanceOrCommunity(card:any = {}, playerIndex = -1){
     this.helpers.closeAllDialogs();
-    let type = this.UI.card.type;
+    let type = card.type ? card.type : this.UI.card.type;
     if(type === 'position no money'){
-      let position = this.UI.card.position;
-      this.moveTo(position, false);
+      let position = card.position ? card.position : this.UI.card.position;
+      this.moveTo(position, false, playerIndex);
     }
     else if(type === 'position'){
-      let position = this.UI.card.position;
-      this.moveTo(position, true);
+      let position = card.position ? card.position : this.UI.card.position;
+      this.moveTo(position, true, playerIndex);
     }
     else if(type === 'collect from all'){
-      this.collectMoneyFromAll();
+      this.collectMoneyFromAll(card, playerIndex);
     }
     else if(type === 'pay all'){
-      this.giveMoneyToAll();
+      this.giveMoneyToAll(card, playerIndex);
     }
     else if(type === 'jail'){
       this.goToJail();
     }
     else if(type === 'pay'){
-      this.payChanceOrCommunity();
+      this.payChanceOrCommunity(card, playerIndex);
     }
     else if(type === 'getPaid'){
-      this.collectFromChanceOrCommunity();
+      this.collectFromChanceOrCommunity(card, playerIndex);
     }
+    this.turnEmitedEvents.push({card: this.UI.card});
   }
 
   /** AFTER DICE ROLL */
@@ -491,13 +632,14 @@ export class AppComponent implements OnInit{
       }
     }
     else if(block.type === 'community' || block.type === 'chance'){
-      this.openChestAndChanceDialog();
+      this.openChestAndChanceDialog();//this.UI.card
     }
     else if(block.type === 'casino'){
       this.openCasinoDialog(block);
     }
   }
 
+  //emitted
   buyBlock(){
     let block = this.board[this.UI.currentBlock];
     let cost = block.cost;
@@ -513,20 +655,25 @@ export class AppComponent implements OnInit{
       player.cards[block.continent].push(blockCode);
     }
     this.helpers.closeAllDialogs();
+
+    this.turnEmitedEvents.push({ buyBlockIndex: this.UI.blocks.indexOf(this.UI.currentBlock) });
     //console.log(this.players);
   }
 
+  //emitted
   onSlotEnd(e:number){
     //this.helpers.closeAllDialogs();
     let player = this.players[this.game.currentPlayer];
     player.money+=e;
     let bg = e > 0 ? 'rgba(0,128,0,.5)' : 'rgba(255,0,0,.5)';
     this.showCellAnimation(this.UI.currentBlock, `${e}`, bg);
+    this.turnEmitedEvents.push({casino: e});
   }
   
   openCountryInfoDialog(card:any){
     let block = this.board[card];
     this.UI.selectedBlock = block;
+    this.UI.selectedBlockIndex = this.UI.blocks.indexOf(card);
     let cls = block.cls.split(' ').pop();
     this.helpers.openDialog({
       headerText: `${block.continent} - ${block.verb}`,
@@ -535,16 +682,51 @@ export class AppComponent implements OnInit{
     });
   }
 
+  //emitted
   build(){
     let level = this.UI.selectedBlock.building;
     let cost = this.UI.selectedBlock.buildCosts[level];
     this.UI.selectedBlock.building+=1;
     this.players[this.game.currentPlayer].money-= cost;
+    this.turnEmitedEvents.push({ 
+      buildBlockIndex: this.UI.blocks.indexOf(this.UI.currentBlock) 
+    })
   }
 
   //emittedEvents{roomId:number type:string player:number info:any}
 
   /** EMIT EVENTS *******************************************/
+
+
+  async emitTurnDataAndAddNewTurn(){
+    await this.apiService.finalizeBoardTurn(
+      this.boardTurn.id, 
+      this.createBordSnapshot(),
+      this.turnEmitedEvents
+    );
+    this.turnEmitedEvents = [];
+    //await this.helpers.pause(1500);
+    let res = await (this.apiService.newBoardTurn(this.game.id, this.game.currentPlayer));
+    this.boardTurn.id = res.id;
+  }
+
+  createBordSnapshot(){
+    let boardState = {};
+    (this.UI.blocks).forEach(i => {
+      boardState[i] = {
+        o: this.board[i].ownedBy,
+        b: this.board[i].building
+      }
+    });    
+    return boardState;
+  }
+
+  buildBoardFromSnapshot(snapshot: any){
+    //boardSnapShot
+    for(let prop in snapshot){
+      this.board[prop] = Object.assign(this.board[prop], {ownedBy: snapshot[prop].o, building: snapshot[prop].b});
+    }
+  }
 
   async emitPlayerMove(playerIndex: number, diceTotal: number){
     let counter = 0;
@@ -575,11 +757,187 @@ export class AppComponent implements OnInit{
 
   }
 
-  renderDice(diceOne:number, diceTwo: number) {
+  async renderDice(diceOne:number, diceTwo: number) {
     let elDiceOne = document.getElementById('dice1');
     let elDiceTwo = document.getElementById('dice2');
+
+    for (var i = 1; i <= 6; i++) {
+      elDiceOne.classList.remove('show-' + i);
+      elDiceTwo.classList.remove('show-' + i);
+    }
+
     elDiceOne.classList.add('show-' + diceOne);
     elDiceTwo.classList.add('show-' + diceTwo);
+    return new Promise((resolve, reject) => {
+      setTimeout(()=>{
+        resolve('emitPlayerMoveFinished');
+      }, 500);
+    });
+  }
+
+  emitBuyBlock(playerIndex: number, blockIndex: number){
+    let block = this.board[this.UI.blocks[blockIndex]];
+    let cost = block.cost;
+    let player = this.players[playerIndex];
+    let blockCode = this.UI.blocks[player.position];
+    player.money-= cost;
+    block.ownedBy = playerIndex;
+
+    if(!player.cards[block.continent]){
+      player.cards[block.continent] = [blockCode];
+    }
+    else{
+      player.cards[block.continent].push(blockCode);
+    }
+    this.showCellAnimation(this.UI.blocks[blockIndex], `-${cost} €`);
+    //this.helpers.closeAllDialogs();
+    //console.log(this.players);
+  }
+
+  emitBuild(playerIndex: number, blockIndex: number){
+    
+    let block = this.board[this.UI.blocks[blockIndex]];
+    let level = block.building;
+    let cost = block.buildCosts[level];
+    block.building+=1;
+    this.players[playerIndex].money-= cost;
+  }
+
+  emitOnSlotEnd(playerIndex: number, amount: number){
+    //this.helpers.closeAllDialogs();
+    let player = this.players[playerIndex];
+    player.money+=amount;
+    let bg = amount > 0 ? 'rgba(0,128,0,.5)' : 'rgba(255,0,0,.5)';
+    let currentBlock = this.UI.blocks[this.players[playerIndex].position];
+    this.showCellAnimation(currentBlock, `${amount}`, bg);
+  }
+
+  async getAndRenderBoardTurn(gameId: number, boardTurnId?:number) : Promise<BoardTurnI>{
+ 
+    let res = boardTurnId ? 
+              await this.apiService.getLastBoardTurnWithEvents( gameId ) : 
+              await this.apiService.getLastBoardTurnForGame( gameId );
+
+    let playerIndex = res['player_index'];
+
+    if( !res.dice || (playerIndex === this.myPlayerIndex) ){
+      return res;
+    }
+    if(!this.emittedEvents.diceRoll){
+      this.emittedEvents.diceRoll = true;
+      let diceObj = JSON.parse(res.dice);
+      await this.renderDice(diceObj.d1, diceObj.d2);
+      await this.emitPlayerMove( playerIndex, (diceObj.d1+diceObj.d2) );
+
+    }
+    if(!res['turn_events']){
+      return res;
+    }
+    if(!this.emittedEvents.turnEvents){
+      this.emittedEvents.turnEvents = true;
+      let turnEvents = JSON.parse(res['turn_events']);
+      let boardSnapshot = JSON.parse(res['board_snapshot']);
+
+      for(let i = 0, len=turnEvents.length; i < len; i+=1){
+        let e = turnEvents[i];
+        let key = Object.keys(e)[0];
+        let val = e[key];
+        //console.log(key, val);
+        //await this.helpers.pause(1000);
+        if(key === 'buyBlockIndex'){
+          this.emitBuyBlock(playerIndex, val);
+        }
+        else if(key === 'card'){ 
+          this.doActionForChanceOrCommunity(val, playerIndex);
+          this.helpers.showToastrInfo(val.text);
+        }
+        else if(key === 'casino'){ 
+          this.emitOnSlotEnd(playerIndex, val);
+        }
+        else if(key === 'jain'){
+          this.goToJail(playerIndex);
+        }
+        else if(key === 'buildBlockIndex'){
+          //await this.helpers.pause(5000);
+          //console.log(playerIndex, val);
+          this.emitBuild(playerIndex, val);
+        }      
+      }
+      
+    }
+
+    // this.buildBoardFromSnapshot(boardSnapshot);
+    //console.log(this.board);
+    // for(let i = 0, len=turnEvents.length; i < len; i+=1){
+    //   let event = turnEvents[i]
+    // }
+
+    return res;
+  }
+
+
+
+  /** HISTORY */
+
+  async renderBoardTurnForGame(gameId: number, offset: number){
+    let res = await this.apiService.getBoardTurnForGame(gameId, offset);
+    if(res.noMoreTurns || !res.dice){
+      return res;
+    }
+    let diceObj = JSON.parse(res.dice);
+    let boardSnapshot = JSON.parse(res['board_snapshot']);
+    let turnEvents = JSON.parse(res['turn_events']);
+    let playerIndex = res['player_index'];
+    await this.renderDice(diceObj.d1, diceObj.d2);
+    await this.emitPlayerMove( playerIndex, (diceObj.d1+diceObj.d2) );
+
+    for(let i = 0, len=turnEvents.length; i < len; i+=1){
+      let e = turnEvents[i];
+      let key = Object.keys(e)[0];
+      let val = e[key];
+      console.log(key, val);
+      await this.helpers.pause(1000);
+      if(key === 'buyBlockIndex'){
+        this.emitBuyBlock(playerIndex, val);
+      }
+      else if(key === 'card'){ 
+        this.doActionForChanceOrCommunity(val, playerIndex);
+        this.helpers.showToastrInfo(val.text);
+      }
+      else if(key === 'casino'){ 
+        this.emitOnSlotEnd(playerIndex, val);
+      }
+      else if(key === 'jain'){
+        this.goToJail(playerIndex);
+      }
+      else if(key === 'buildBlockIndex'){
+        //await this.helpers.pause(5000);
+        //console.log(playerIndex, val);
+        this.emitBuild(playerIndex, val);
+      }      
+    }
+    
+   // this.buildBoardFromSnapshot(boardSnapshot);
+//console.log(this.board);
+    // for(let i = 0, len=turnEvents.length; i < len; i+=1){
+    //   let event = turnEvents[i]
+    // }
+    return res;
+  }
+
+  async renderGameFromHistory(gameId:number){
+    let res = await this.renderBoardTurnForGame(gameId, 0);
+    let offset = 0;
+    while(!res.noMoreTurns){
+      offset+=1;
+      await this.helpers.pause(2000);
+      res = await this.renderBoardTurnForGame(gameId, offset);
+    }
+    
+    alert('Finoto!!!!');
+    // await this.getBoardForGame(1);
+    // await this.helpers.pause(2000);   
+    // await this.getBoardForGame(2);
   }
 
 

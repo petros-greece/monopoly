@@ -73,22 +73,26 @@
       </div>
     </div> 
   </div>
-  <button 
-    mat-raised-button
-    *ngIf="canRoll" 
-    color="primary" 
-    [disabled]="isRolling"
-    (click)="rollDice()" 
-    style="top: 100px;left: 18px;">
-    Roll
-  </button>
-  <button 
-    mat-raised-button
-    *ngIf="!canRoll" 
-    color="primary" 
-    (click)="nextTurnClbk()" 
-    style="top: 100px;left: 4px;">
-    Next Player
-  </button>  
+
+  <div *ngIf="isCurrentPlayer">
+    <button 
+      mat-raised-button
+      *ngIf="canRoll" 
+      color="primary" 
+      [disabled]="isRolling"
+      (click)="rollDice()" 
+      style="top: 100px;left: 18px;">
+      Roll
+    </button>
+    <button 
+      mat-raised-button
+      *ngIf="!canRoll" 
+      color="primary" 
+      (click)="nextTurnClbk()" 
+      style="top: 100px;left: 4px;">
+      Next Player
+    </button> 
+  </div>
+ 
 
 </div>

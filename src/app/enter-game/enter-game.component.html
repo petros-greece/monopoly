@@ -1,0 +1,111 @@
+<mat-spinner *ngIf="!availableGames"></mat-spinner>
+
+<mat-tab-group [selectedIndex]="selectedIndex" *ngIf="availableGames">
+
+  <mat-tab label="Available Tables">
+    <div class="pad-all-md" *ngIf="availableGames.length">
+      <mat-form-field appearance="fill">
+        <mat-label>Name</mat-label>
+        <input matInput type="text" [(ngModel)]="enterGameForm.name">
+      </mat-form-field>
+
+      <table class="my-table">
+        <tr>
+          <th>Table Name</th>
+          <th>Players</th>
+          <th>Created</th>
+          <th></th>
+        </tr>
+        <tr *ngFor="let table of availableGames">
+          <td>{{table['table_name']}}</td>
+          <td>{{table.players.length}}/{{table['num_players']}}</td>
+          <td>{{helpers.formatDate(table.created)}}</td>
+          <td>
+            <button *ngIf="!table.password" 
+              mat-raised-button 
+              color="primary" 
+              (click)="enterBoardGame(table)">
+              Enter Game
+              <mat-icon>casino</mat-icon>
+            </button>
+
+            <button *ngIf="table.password" 
+              color="primary" 
+              mat-raised-button 
+              [matMenuTriggerFor]="menu">
+              Enter Game
+              <mat-icon>lock</mat-icon>
+            </button>
+            
+            <mat-menu #menu="matMenu">
+              <div (click)="$event.stopPropagation()" class="pad-all-md">
+                <mat-form-field>
+                  <mat-label>Password</mat-label>
+                  <input matInput type="password" #password>
+                </mat-form-field>
+                <button 
+                  mat-raised-button 
+                  color="primary"
+                  class="mrgn-l-sm"
+                  (click)="enterBoardGame(table, password.value)">
+                  Enter Game
+                </button>                
+              </div>
+            </mat-menu>
+
+
+          </td>
+        </tr>
+      </table>
+    </div>
+    <div class="pad-all-md" *ngIf="!availableGames.length">
+      <div>
+        There are no opened tables at the moment. You can <b>create a new private or public table</b>.
+      </div>
+      <button mat-raised-button color="primary" (click)="selectedIndex=2">
+        New Table
+      </button>
+    </div>
+
+  </mat-tab>
+
+
+  <mat-tab label="Create Table">
+    <div fxLayout="column" class="pad-all-md">
+      <h3>Create Table</h3>
+      <mat-form-field appearance="fill">
+        <mat-label>Your Name</mat-label>
+        <input matInput type="text" [(ngModel)]="newGameForm.name" maxLength="30">
+      </mat-form-field>
+    
+      <mat-form-field appearance="fill">
+        <mat-label>Number of Players</mat-label>
+        <mat-select [(ngModel)]="newGameForm.numOfPlayers">
+          <mat-option *ngFor="let num of [1,2,3,4]" [value]="num">
+            {{num}}
+        </mat-option>
+        </mat-select>
+      </mat-form-field>
+    
+      <mat-form-field appearance="fill">
+        <mat-label>Table Name</mat-label>
+        <input matInput type="text" [(ngModel)]="newGameForm.tableName" maxLength="30">
+      </mat-form-field>
+    
+      <mat-form-field appearance="fill">
+        <mat-label>Table Password</mat-label>
+        <input matInput type="password" [(ngModel)]="newGameForm.pass" min="0" max="9999">
+        <mat-hint>Only for private tables </mat-hint>
+      </mat-form-field>
+      <button mat-raised-button color="primary" (click)="createGame()" class="mrgn-t-md">
+        Create Table
+      </button>
+    </div>
+
+  </mat-tab>
+
+</mat-tab-group>
+
+
+
+
