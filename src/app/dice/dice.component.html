@@ -86,7 +86,7 @@
     </button>
     <button 
       mat-raised-button
-      *ngIf="!canRoll" 
+      *ngIf="showNextPlayer" 
       color="primary" 
       (click)="nextTurnClbk()" 
       style="top: 100px;left: 4px;">

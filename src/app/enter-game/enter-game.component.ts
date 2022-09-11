@@ -1,4 +1,4 @@
-import { Component, OnInit, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, Output, EventEmitter, OnDestroy } from '@angular/core';
 import { HelpersService } from '../service/helpers.service';
 import { MonopolyService } from '../service/monopoly-api.service';
 
@@ -7,22 +7,24 @@ import { MonopolyService } from '../service/monopoly-api.service';
   templateUrl: './enter-game.component.html',
   styleUrls: ['./enter-game.component.scss']
 })
-export class EnterGameComponent implements OnInit {
+export class EnterGameComponent implements OnInit , OnDestroy{
 
   @Output("onEnterGame") public onEnterGame: EventEmitter<any> = new EventEmitter<any>();
 
+  availTablesInterval: any;
+
   newGameForm = {
-    name: 'testing',
+    name: '',
     numOfPlayers: 2,
     pass: '',
     tableName: ''
   };
 
   enterGameForm = {
-    name: 'jhg',
+    name: '',
   }
 
-  selectedIndex = 1;
+  selectedIndex = 0;
   availableGames: any;
 
   constructor(
@@ -31,6 +33,20 @@ export class EnterGameComponent implements OnInit {
   ) { }
 
   async ngOnInit() {
+    await this.checkAvailableGames();
+    this.availTablesInterval = setInterval(async() => {
+      await this.checkAvailableGames();
+    }, 3000);
+
+  }
+
+  async ngOnDestroy() {
+    clearInterval(this.availTablesInterval);
+  }
+
+
+
+  async checkAvailableGames(){
     let games = await this.apiService.getAvailableGames();
     this.availableGames = games.map((game) => {
       game.players = JSON.parse(game.players);
@@ -48,12 +64,12 @@ export class EnterGameComponent implements OnInit {
     this.onEnterGame.emit({gameId: gameId, playerIndex: 0});
   }
 
-  async enterBoardGame(game: any, pass?:string){
+  async enterBoardGame(game: any, pass?:number){
     if(!this.enterGameForm.name){
       this.helpers.showToastrError('You name is required!');
       return;
     }    
-    let res = await this.apiService.addPlayerToGame(this.enterGameForm.name, game.id);
+    let res = await this.apiService.addPlayerToGame(this.enterGameForm.name, game.id, pass);
     this.onEnterGame.emit({gameId: game.id, playerIndex: res.playerIndex });
   }
 

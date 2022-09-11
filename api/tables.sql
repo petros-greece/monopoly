@@ -3,25 +3,26 @@ CREATE TABLE `monopoly_game` (
   `players` json NOT NULL,
   `num_players` int(1) UNSIGNED NOT NULL,
   `has_started` bit DEFAULT 0,
+  `table_name` varchar(100) DEFAULT '',
   `password` int(4) UNSIGNED NOT NULL,
   `created` timestamp NOT NULL default current_timestamp,
   `updated` timestamp NOT NULL default current_timestamp on update current_timestamp,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE `monopoly_board_turn` (
+
+CREATE TABLE `monopoly_board_turn_events` (
   `id` int(6) UNSIGNED NOT NULL AUTO_INCREMENT,
-  `game_id` int(6) UNSIGNED NOT NULL,
-  `board_snapshot` json,
-  `turn_events` json,
-  `dice` varchar(20) NOT NULL,
-  `turn` int(6) UNSIGNED,
+  `game_id` int(6) UNSIGNED NOT NULL, 
+  `event_info` json,
   `player_index` int(1) UNSIGNED,
   `created` timestamp NOT NULL default current_timestamp,
   `updated` timestamp NOT NULL default current_timestamp on update current_timestamp,
   PRIMARY KEY (`id`),
   FOREIGN KEY (`game_id`) REFERENCES monopoly_game(`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
 
 `
 1. When the dice is rolled a new 'monopoly_board_turn' is created with the dice field filled

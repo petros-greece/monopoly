@@ -24,6 +24,7 @@
 
             <h3 [style.color]="player.color">
               {{player.name}}
+              <mat-icon *ngIf="myPlayerIndex === i">star</mat-icon>
               <span fxFlex></span>
               
               <div 
@@ -40,13 +41,13 @@
                 <mat-icon class="mrgn-l-xs">euro</mat-icon>
 
               </div>
-              <div fxFlex="60" [ngClass]="game.currentPlayer === i ? '' : 'no-pointer-events'">
+              <div fxFlex="60" [ngClass]="myPlayerIndex === i ? '' : 'no-pointer-events'">
                 <div *ngFor="let continent of UI.continents">
                   <div *ngIf="player.cards[continent.name]">
                    
                     <span 
                       *ngFor="let card of player.cards[continent.name]"
-                      style="display: inline-block;width: 25px;height: 30px;text-align: center;line-height: 30px;border-radius: 3px;" 
+                      style="display: inline-block;width: 25px;height: 30px;text-align: center;line-height: 30px;border-radius: 3px;cursor:pointer;" 
                       class="animated zoomIn"
                       (click)="openCountryInfoDialog(card)"
                       [matTooltip]="board[card].verb"
@@ -94,7 +95,7 @@
         [ngClass]="(board[i+''+j] && board[i+''+j].type === 'country') ? 'monopoly-cell' : ''"
         [style.background]="(board[i+''+j] && board[i+''+j].ownedBy > -1) ? players[board[i+''+j].ownedBy].areaBg : ''">
               
-          <div *ngIf="i+''+j === UI.cellInfo.which && UI.cellInfo.show" 
+          <div *ngIf="(i+''+j === UI.cellInfo.which) && UI.cellInfo.show" 
             class="animated zoomIn cell-info-popup"
             [style.background]="UI.cellInfo.bg">
             {{UI.cellInfo.text}} 
@@ -109,22 +110,16 @@
               class="tile"
               [ngClass]="board[i+''+j].cls"
               style="border: 1px solid grey;">
-              {{board[i+''+j].verb}}
-              
+              {{board[i+''+j].verb}}         
             </div> 
   
-           <app-building 
-            *ngIf="board[i+''+j].type==='country' && board[i+''+j].building > 0" 
-            [type]="board[i+''+j].building"
-            [cls]="board[i+''+j].buildCls"></app-building>
-
-            <!-- 
             <app-building 
-              *ngIf="board[i+''+j].type==='country'" 
-              [type]="1"
+              *ngIf="board[i+''+j].type==='country' && board[i+''+j].building > 0" 
+              [type]="board[i+''+j].building"
               [cls]="board[i+''+j].buildCls">
-            </app-building> 
-          -->
+            </app-building>
+
+           
 
             <div *ngIf="board[i+''+j].type==='edge'">
               <img [ngClass]="board[i+''+j].cls" src="{{board[i+''+j].img}}" 
@@ -161,19 +156,19 @@
     <!-- <app-player [cls]="players[1].cls" [bg]="players[1].color" [playerCls]="'player-1'"></app-player>
     <app-player [cls]="players[2].cls" [bg]="players[2].color" [playerCls]="'player-2'"></app-player>   
     <app-player [cls]="players[3].cls" [bg]="players[3].color" [playerCls]="'player-3'"></app-player>     -->
-My index: {{ myPlayerIndex }} <br>
-Current Index: {{ game.currentPlayer }}
+
     <app-dice 
       (onDiceTotal)="movePlayer($event)"
       (onNextTurnClbk)="nextTurn()"
-      [(isCurrentPlayer)]="myPlayerIndex === game.currentPlayer"
-      [(canRoll)]="UI.canRoll">
+      [isCurrentPlayer]="myPlayerIndex === game.currentPlayer"
+      [showNextPlayer]="UI.showNextPlayer"
+      [canRoll]="UI.canRoll">
     </app-dice>
 
   </div>
 
 </div>
-
+   
 <!-- CARD DIALOG -------------------------------->
 
 <ng-template #cardTmpl>
@@ -204,7 +199,7 @@ Current Index: {{ game.currentPlayer }}
           <td>{{board[this.UI.currentBlock].rents[1]}}</td>
         </tr>
         <tr>
-          <td fxLayoutAlign="start center"><mat-icon>location_city</mat-icon>Scycraper</td>
+          <td fxLayoutAlign="start center"><mat-icon>location_city</mat-icon>Scyscraper</td>
           <td>{{board[this.UI.currentBlock].buildCosts[2]}}</td>
           <td>{{board[this.UI.currentBlock].rents[2]}}</td>
         </tr>        
@@ -280,7 +275,7 @@ Current Index: {{ game.currentPlayer }}
         <td>{{UI.selectedBlock.rents[1]}}</td>
         <td>
           <button mat-raised-button color="primary" (click)="build()"
-           [disabled]="UI.selectedBlock.building !== 0">
+           [disabled]="UI.selectedBlock.building !== 0 || myPlayerIndex !== game.currentPlayer">
             Build<mat-icon>home</mat-icon>
           </button>
         </td>
@@ -297,7 +292,7 @@ Current Index: {{ game.currentPlayer }}
         <td>{{UI.selectedBlock.rents[2]}}</td>
         <td>
           <button mat-raised-button color="primary" (click)="build()" 
-            [disabled]="UI.selectedBlock.building !== 1">
+            [disabled]="UI.selectedBlock.building !== 1 || myPlayerIndex !== game.currentPlayer">
             Build<mat-icon>location_city</mat-icon>
           </button>
         </td>

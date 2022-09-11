@@ -48,9 +48,11 @@ export class MonopolyService {
   ) { 
     this.environment = environment;
     if(this.environment.production){
-      this.endpoint = 'https://siteland.eu/chat/api/query.php';
+      this.endpoint = 'https://siteland.eu/sitelandopoly/api/query.php';
     }
   }
+
+  /** HELPERS ************/
 
   showToastrError(msg: string, title: string = '', opts: any = {}){
     this.toastr.error(msg, title, opts);
@@ -85,11 +87,14 @@ export class MonopolyService {
     });
   }
 
+  /** BEFORE GAME STARTS */
+
   async addPlayerToGame(player: any, gameId:number, pass?:number) : Promise<{hasStarted: boolean, playerIndex: number}>{
+    let p = pass ? pass : 0;
     return await this.postData({
       addPlayerToGame: player,
       gameId: gameId,
-      pass: pass
+      pass: p
     });
   }
 
@@ -105,73 +110,20 @@ export class MonopolyService {
     });     
   }
 
+  /** AFTER GAME STARTS */
 
-
-  async newBoardTurn(gameId: number, playerIndex: number) : Promise<{id:number}> {
+  async insertGameEvent(eventObj: {gameId: number, info: any, playerIndex: number}){
     return await this.postData({
-      newBoardTurn: true,
-      gameId: gameId,
-      playerIndex: playerIndex 
-    });
-  }
-
-  async addDiceToBoardTurn(boardId: number, diceObj: any) : Promise<{status:string}>{
-    return await this.postData({
-      diceToBoardTurn: true,
-      boardId: boardId,
-      diceObj: diceObj 
-    });
-  }
-
-  async finalizeBoardTurn(boardId: number, boardSnapshot: any, turnEvents: any[]) : Promise<{status:string}>{
-    return await this.postData({
-      finalizeBoardTurn: true,
-      boardId: boardId,
-      turnEvents: turnEvents,
-      boardSnapshot: boardSnapshot
-    });    
-  }
-
-  async getLastBoardTurnForGame(gameId:number):Promise<BoardTurnI>{
-    return await this.getData({
-      lastBoardTurnForGame: gameId,
-    });
-  }
-
-  async getBoardTurnById(id:number):Promise<BoardTurnI>{
-    return await this.getData({
-      boardTurnById: id,
-    });
-  }
-
-  async getLastBoardTurnWithEvents(gameId:number):Promise<BoardTurnI>{
-    return await this.getData({
-      lastBoardTurnWithEvents: gameId,
-    });
-  }
-
-  async getBoardTurnForGame(gameId: number, offset: number):Promise<BoardTurnI | any >{
-    return await this.getData({
-      boardTurnForGame: true,
-      gameId: gameId,
-      offset: offset
+      newGameEvent: eventObj
     });      
   }
 
-
-
-
-
-
-
-  async getMainMessages(userId: string){
+  async getEventsForGame(gameId: number, lastSeenEventId: number){
     return await this.getData({
-      mainMessages: true,
-      userId: userId
-    });      
+      gameId: gameId,
+      lastSeenEventId: lastSeenEventId
+    });   
   }
-
-
 
 
 }

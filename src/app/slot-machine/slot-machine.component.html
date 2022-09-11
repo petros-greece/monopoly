@@ -55,7 +55,7 @@
   </div>
 
   <div fxLayout="row" fxLayoutAlign="center center" fxLayoutGap="10px">
-    <button [disabled]="rolled" mat-raised-button class="mat-pink" (click)="rollSlot()">Roll</button>
+    <button *ngIf="!rolled" mat-raised-button class="mat-pink" (click)="rollSlot()">Roll</button>
     <button mat-raised-button class="mat-pink" (click)="helpers.closeAllDialogs()">
       {{ !rolled ? 'Sorry I don\'t gamble' : 'Close' }}
     </button>
