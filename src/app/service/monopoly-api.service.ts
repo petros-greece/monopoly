@@ -125,6 +125,15 @@ export class MonopolyService {
     });   
   }
 
+  /** HISTORY */
+
+  async getHistoryGames(offset: number, limit = 10){
+    return await this.getData({
+      historyGames: true,
+      limit: limit,
+      offset: offset
+    });  
+  }
 
 }
 

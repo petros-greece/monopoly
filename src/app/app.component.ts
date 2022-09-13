@@ -17,21 +17,29 @@ export class AppComponent implements OnInit{
   @ViewChild('casinoTmpl', {static: true}) casinoTmpl: TemplateRef<any>;  
   @ViewChild('countryInfoTmpl', {static: true}) countryInfoTmpl: TemplateRef<any>;
   @ViewChild('enterGameTmpl', {static: true}) enterGameTmpl: TemplateRef<any>;
-  
+  @ViewChild('gameRulesTmpl', {static: true}) gameRulesTmpl: TemplateRef<any>;
+  @ViewChild('auctionTmpl', {static: true}) auctionTmpl: TemplateRef<any>;
+ 
   @ViewChild('mainMenuTrigger') mainMenuTrigger: MatMenuTrigger;
 
   @HostListener('window:resize', ['$event'])
-  onResize(event) {
+  onResize(event:any) {
     this.resizeBoard();
   }
 
   playerInterval:any;
   gameInterval  :any;
+  timerInterval : any;
+  auction: any;
+  auctionInterval: any;
+
+
 
   timers = {
     checkBoardPlayers: 3000,
     myPlayerMove: 200,
-    yourPlayerMove: 100
+    yourPlayerMove: 100,
+    gameInterval: 2500
   }
 
   UI = {
@@ -143,7 +151,7 @@ export class AppComponent implements OnInit{
     '07': { type: 'edge',          continent: '',         verb: 'Jail',              img: './assets/images/jail.png',           cost: 0,   ownedBy: -1, cls: '' },
     
     '17': { type: 'country',       continent: 'Europe',   verb: 'Italy',             img: '',                                   cost: 50,  ownedBy: -1, cls: 'rotate-right mat-red', buildCls: 'building-right' },
-    '27': { type: 'casino',        continent: '',         verb: 'Bellagio',            img: './assets/images/casino.png',       cost: 0,   ownedBy: -1, cls: 'rotate-right' },
+    '27': { type: 'casino',        continent: '',         verb: 'Bellagio',          img: './assets/images/casino.png',       cost: 0,   ownedBy: -1, cls: 'rotate-right' },
     '37': { type: 'country',       continent: 'Europe',   verb: 'France',            img: '',                                   cost: 70,  ownedBy: -1, cls: 'rotate-right mat-red', buildCls: 'building-right' },
     '47': { type: 'country',       continent: 'Europe',   verb: 'England',           img: '',                                   cost: 70,  ownedBy: -1, cls: 'rotate-right mat-red', buildCls: 'building-right' },
     '57': { type: 'railroad',      continent: 'Railroal', verb: 'Frankfurt Station', img: './assets/images/railroad.png',       cost: 100, ownedBy: -1, cls: 'rotate-right' },  
@@ -173,6 +181,9 @@ export class AppComponent implements OnInit{
 
   }
   
+  //used for info
+  filteredBoard: any[];
+  filteredRailroads: any[];
 
   constructor(
     public helpers: HelpersService,
@@ -189,22 +200,23 @@ export class AppComponent implements OnInit{
     this.openEnterGameDialog();
     this.resizeBoard();
     this.calculateBuildingPrices();
-
-    setTimeout(()=>{
-      if(window.innerWidth > 700){     
-        this.mainMenuTrigger.openMenu();
-      }
-    }, 10); 
-
+    this.getFilteredBoard();
     //this.renderGameFromHistory(1);
-
-    // this.monopolyInterval();
-   
-    //this.enterGame(2);
-
   }
 
+  renderFromHistory(e){
+    this.renderGameFromHistory(e.gameId);
+  }
+
+
   /** BEFORE  ************************/
+
+  openRulesDialog(){
+    this.helpers.openDialog({
+      headerText: `Sitelandopoly Rules & Info`,
+      template: this.gameRulesTmpl,
+    });
+  }
 
   filterPlayers(players:any[]):any[]{
     return players.filter((p:any)=>{
@@ -221,7 +233,7 @@ export class AppComponent implements OnInit{
 
   async checkBoardPlayers() : Promise<GameI>{
     this.helpers.showToastrInfo('Waiting for other players to enter', '', 
-    {timeOut: this.timers.checkBoardPlayers, easing: 'ease-in-out'});
+    {timeOut: (this.timers.checkBoardPlayers-100), easing: 'ease-in-out'});
     let res = await this.apiService.getGameInfo(this.game.id);
     let names = JSON.parse(res.players);
     for(let i = 0, len = names.length; i < len; i+=1){
@@ -231,7 +243,6 @@ export class AppComponent implements OnInit{
     return res;    
   }
 
-  //
   async enterGame(e:{gameId: number, playerIndex: number}){
     this.helpers.closeAllDialogs();
     this.myPlayerIndex = e.playerIndex;
@@ -241,12 +252,13 @@ export class AppComponent implements OnInit{
       res = await this.checkBoardPlayers();
       if( res['has_started'] ){
         clearInterval(this.playerInterval);
+        if(window.innerWidth > 700){     
+          this.mainMenuTrigger.openMenu();
+        }        
         this.UI.canRoll = true;
-        //only the current user creates a new board turn which will be emitted to other players
-        if(this.game.currentPlayer === this.myPlayerIndex){
-   
-        }
+        this.helpers.showToastrSuccess('The game has began!!');
         this.monopolyInterval();
+        this.runTimerInterval();
       } 
     }, this.timers.checkBoardPlayers);
   }
@@ -271,14 +283,25 @@ export class AppComponent implements OnInit{
       }    
     }
     //console.log(this.board);
-    let map = (this.UI.blocks).map((item:any) => {
-      return {
-        ownedBy: this.board[item].ownedBy,
-        building: this.board[item].building
-      }
-    })
-    
 
+  }
+
+  getFilteredBoard(){
+    let board = this.helpers.clone(this.board);
+    let boardArr = [];
+    let railroadArr = [];
+    for(let prop in board){
+      if( board[prop].type === 'country'){
+        board[prop].cls = (board[prop].cls).split(' ').pop();
+        boardArr.push(board[prop]);
+      }
+      else if( board[prop].type === 'railroad'){
+        railroadArr.push(board[prop]);
+      }
+    }
+
+    this.filteredRailroads = railroadArr;
+    this.filteredBoard = boardArr.sort((a,b) => (a.continent > b.continent) ? 1 : ((b.continent > a.continent) ? -1 : 0));
   }
 
   resizeBoard(){
@@ -296,22 +319,47 @@ export class AppComponent implements OnInit{
   monopolyInterval(){
     this.gameInterval = setInterval(async()=>{
 
-      
       //if is not me render the the emitted events
       if(this.game.currentPlayer !== this.myPlayerIndex){
         
         let emittedEvents = await this.apiService.getEventsForGame(this.game.id, this.lastEmittedEventId);
-        console.log(emittedEvents);
         if( emittedEvents.length ){
           this.lastEmittedEventId = emittedEvents[emittedEvents.length-1].id;
           await this.renderUnseenEmittedEvents(emittedEvents);
-        }
-
-
-        
+          this.checkBankruptedPlayers();
+        }     
       }
-    }, 3000);
+    }, this.timers.gameInterval);
   }
+
+  runTimerInterval(){
+    this.timerInterval = setInterval(()=>{
+      if(this.UI.timer >= 0){
+        this.UI.timer-= 1;
+      }
+      else{
+        //@todo inactivate player if he looses his turn 3 times in the row
+        this.nextTurn();
+      }
+    }, 1000);
+  }
+
+  /** INTERVAL CHECKS */
+
+  checkBankruptedPlayers(){
+    for(let i =0, len = this.players.length; i < len; i+=1){
+      if(this.players[i].money < 0){
+        this.players[i].isActive = false;
+        for(let prop in this.board){
+          if(this.board[prop].ownedBy === i){
+            this.board[prop].ownedBy = -1;
+            this.board[prop].building = 0;
+          }
+        }
+      }
+    }
+  }
+
 
   /** PLAYER TURN AND MOVEMENT *****************/
 
@@ -330,6 +378,12 @@ export class AppComponent implements OnInit{
     if(!foundAscPlayer){
       this.game.currentPlayer = 0;
     }
+  }
+
+  private closeGameRelatedDialogs(){
+    this.helpers.closeDialogById('buyBlockDialog');
+    this.helpers.closeDialogById('chestAndChanceDialog');
+    this.helpers.closeDialogById('CasinoDialog');
   }
 
   //Emitted after the next button clicked and also when the time ends
@@ -359,7 +413,6 @@ export class AppComponent implements OnInit{
       }
       this.emitEvent({nextTurn: this.game.currentPlayer}); 
       this.helpers.closeAllDialogs();
-      await this.helpers.pause(500);
   }
 
   //helper
@@ -383,8 +436,20 @@ export class AppComponent implements OnInit{
     }
     player.position = position;
     player.cls = this.UI.playerClsPrefix+this.UI.blocks[player.position];
-    if(playerIndex === -1){ this.checkBoardBlock(); }
+    if(playerIndex === -1){
+      this.checkBoardBlock();
+    }
+    else{          
+      let blockKey = this.UI.blocks[player.position];
+      let block = this.board[blockKey];
+      //owned by other player
+      if( block.ownedBy > -1 && block.ownedBy !== playerIndex){
+        (block.type === 'country') ? this.payRentForCountry(block, player, blockKey) :
+                                    this.payRentForRailroad(block, player, blockKey);
+      }
+    }
   }
+
 
   //emitted
   async movePlayer(e: any){
@@ -403,6 +468,7 @@ export class AppComponent implements OnInit{
     if( (e.diceOne === e.diceTwo) && (player.position + num !== 21)){
       this.helpers.showToastrSuccess('Doubles! You play again!');
       this.game.playAgain = true;
+      this.emitEvent({ doubles: true });
     }
     else{
       this.game.playAgain = false;
@@ -463,7 +529,7 @@ export class AppComponent implements OnInit{
     this.turnEmitedEvents.push( { jail: true } );
   }
 
-  private openChestAndChanceDialog(){
+  private async openChestAndChanceDialog(){
     let text = this.board[this.UI.currentBlock].verb;
     let type = this.board[this.UI.currentBlock].type;
     let cls = (type === 'community') ? 'mat-blue' : 'mat-orange';
@@ -476,7 +542,13 @@ export class AppComponent implements OnInit{
       template: this.chestAndChanceTmpl,
       cls: cls,
       showClose: false
+    },
+    {
+      id: 'chestAndChanceDialog'
     });
+    await this.helpers.pause(1000);
+    this.doActionForChanceOrCommunity();
+
   }
 
   private collectMoneyFromAll(card:any = {}, playerIndex = -1){
@@ -521,7 +593,6 @@ export class AppComponent implements OnInit{
 
   //emitted
   async doActionForChanceOrCommunity(card:any = {}, playerIndex = -1){
-    this.helpers.closeAllDialogs();
     let type = card.type ? card.type : this.UI.card.type;
     if(type === 'position no money'){
       let position = card.position ? card.position : this.UI.card.position;
@@ -547,18 +618,21 @@ export class AppComponent implements OnInit{
       this.collectFromChanceOrCommunity(card, playerIndex);
     }
     this.turnEmitedEvents.push({card: this.UI.card});
-    await this.emitEvent({card: this.UI.card});
+    if(playerIndex === -1){
+      await this.emitEvent({card: this.UI.card});
+    }
+
   }
 
   /** AFTER DICE ROLL */
-
   private openBuyBlockDialog(block: any){
     let cls = block.cls.split(' ').pop();
     this.helpers.openDialog({
       headerText: `${block.continent} - ${block.verb}`,
       template: this.cardTmpl,
       cls: cls,
-    });
+    },
+    {id: 'buyBlockDialog'});
   }
 
   private payRentForCountry(block: any, player: any, blockKey?: string){
@@ -573,6 +647,7 @@ export class AppComponent implements OnInit{
     let rail1 = this.board['20'];
     let rail2 = this.board['57'];
     let tripCost = block.tripCost;
+    //console.log(tripCost);
     let key = blockKey ? blockKey : this.UI.currentBlock;
     //if the same player owns both the stations double the price
     if( (rail1.ownedBy > -1) && rail1.ownedBy === rail2.ownedBy ){
@@ -580,7 +655,7 @@ export class AppComponent implements OnInit{
     }
     this.showCellAnimation(key, `-${tripCost}`, 'rgba(255,0,0,.5)');
     player.money-= tripCost;
-    this.players[block.ownedBy].money = this.players[block.ownedBy].money+block.rent;    
+    this.players[block.ownedBy].money+= tripCost;    
   }
 
   private checkCountryOrRailoadBlock(block: any, player: any):any{
@@ -610,11 +685,16 @@ export class AppComponent implements OnInit{
       headerText: `Casino  ${block.verb}`,
       template: this.casinoTmpl,
       cls: 'mat-pink',
-    });   
+    },
+    {id: 'CasinoDialog'}
+    );   
   }
 
   openCountryInfoDialog(card:string){
     let block = this.board[card];
+    if(block.type !== 'country' || block.ownedBy !== this.myPlayerIndex){
+      return;
+    }
     this.UI.selectedBlock = block;
     this.UI.selectedBlockIndex = this.UI.blocks.indexOf(card);
     let cls = block.cls.split(' ').pop();
@@ -671,7 +751,6 @@ export class AppComponent implements OnInit{
 
   //emitted
   onSlotEnd(e:number){
-    //this.helpers.closeAllDialogs();
     let player = this.players[this.game.currentPlayer];
     player.money+=e;
     let bg = e > 0 ? 'rgba(0,128,0,.5)' : 'rgba(255,0,0,.5)';
@@ -685,7 +764,7 @@ export class AppComponent implements OnInit{
     let cost = this.UI.selectedBlock.buildCosts[level];
     this.UI.selectedBlock.building+=1;
     this.players[this.game.currentPlayer].money-= cost;
-    this.emitEvent({buildBlockIndex: this.UI.blocks.indexOf(this.UI.currentBlock)}); 
+    this.emitEvent({buildBlockIndex: this.UI.selectedBlockIndex}); 
   }
 
   //emittedEvents{roomId:number type:string player:number info:any}
@@ -785,7 +864,6 @@ export class AppComponent implements OnInit{
       player.cards[block.continent].push(blockCode);
     }
     this.showCellAnimation(this.UI.blocks[blockIndex], `-${cost} €`);
-    //this.helpers.closeAllDialogs();
     //console.log(this.players);
   }
 
@@ -795,12 +873,11 @@ export class AppComponent implements OnInit{
     let cost = block.buildCosts[level];
     block.building+=1;
     this.players[playerIndex].money-= cost;
-    console.log(block)
-    console.log(this.board);
+    //console.log(block)
+    //console.log(this.board);
   }
 
   emitOnSlotEnd(playerIndex: number, amount: number){
-    //this.helpers.closeAllDialogs();
     let player = this.players[playerIndex];
     player.money+=amount;
     let bg = amount > 0 ? 'rgba(0,128,0,.5)' : 'rgba(255,0,0,.5)';
@@ -808,8 +885,8 @@ export class AppComponent implements OnInit{
     this.showCellAnimation(currentBlock, `${amount}`, bg);
   }
 
-
   async renderUnseenEmittedEvents(e: any[]){
+    this.UI.canRoll = false;
     for(let i = 0, len = e.length; i < len; i+=1){
       let event = JSON.parse(e[i]['event_info']);
       let playerIndex = e[i]['player_index'];
@@ -824,7 +901,7 @@ export class AppComponent implements OnInit{
         this.emitBuyBlock(playerIndex, val);
       }
       else if(key === 'card'){ 
-        this.doActionForChanceOrCommunity(val, playerIndex);
+        await this.doActionForChanceOrCommunity(val, playerIndex);
         this.helpers.showToastrInfo(val.text);
       }
       else if(key === 'casino'){ 
@@ -844,16 +921,49 @@ export class AppComponent implements OnInit{
       } 
       else if(key === 'nextTurn'){
         this.game.currentPlayer = val;
-      }      
-
-
-
+        this.UI.timer = 30;
+      } 
+      else if(key === 'doubles'){
+        this.UI.timer = 30;
+      }            
+      else if(key === 'auction'){
+        
+      }     
     }
-
+    this.UI.canRoll = true;
 
   }
 
 
+  /** AUCTION *********************************************************/
 
+  beginAuction(amount: number){
+    console.log(this.UI.selectedBlockIndex);
+    //console.log(amount);
+    //this.emitEvent( { auction: {amount: amount, blockIndex: this.UI.selectedBlockIndex } } ); 
+  }
+
+
+  openAuctionDialog(){
+    
+  }
+
+
+
+  /** RENDER GAME FROM HISTORY *******************************************/ 
+
+  async renderGameFromHistory(gameId: number){
+    this.helpers.closeAllDialogs();
+    let info = await this.apiService.getGameInfo(gameId);
+    let players = JSON.parse(info['players']);
+    //console.log(players)
+    for(let i = 0, len = players.length; i < len; i+=1){
+      this.players[i].isActive = true;
+      this.players[i].name = players[i];
+
+    }
+    let e = await this.apiService.getEventsForGame(gameId, 0);
+    await this.renderUnseenEmittedEvents(e);
+  }
   
 }

@@ -1,17 +1,21 @@
 
-<mat-tab-group [selectedIndex]="selectedIndex" *ngIf="availableGames">
+<mat-tab-group 
+  [selectedIndex]="selectedIndex"
+  (selectedTabChange)="onTabChange($event)" 
+  *ngIf="availableGames" 
+  style="max-width: 600px">
 
   <mat-tab label="Available Tables">
     <div class="pad-all-md" *ngIf="availableGames.length">
-      <mat-form-field appearance="fill">
-        <mat-label>Name</mat-label>
+      <mat-form-field appearance="fill" style="width: 100%">
+        <mat-label>Your Name</mat-label>
         <input matInput type="text" [(ngModel)]="enterGameForm.name">
       </mat-form-field>
 
-      <table class="my-table">
+      <table class="my-table table-left pad-all-sm mat-grey-700">
         <tr>
           <th>Table Name</th>
-          <th>Players</th>
+          <th class="mrgn-r-sm">Players</th>
           <th>Created</th>
           <th></th>
         </tr>
@@ -31,7 +35,10 @@
             <button *ngIf="table.password" 
               color="primary" 
               mat-raised-button 
-              [matMenuTriggerFor]="passMenu">
+              [matMenuTriggerFor]="passMenu"
+              #t="matMenuTrigger"
+              (menuOpened)="togglePassMenu('open')"
+              (menuClosed)="togglePassMenu('close')">
               Enter Game
               <mat-icon>lock</mat-icon>
             </button>
@@ -41,7 +48,7 @@
               <div (click)="$event.stopPropagation()" class="pad-all-md">
                 <mat-form-field>
                   <mat-label>Password</mat-label>
-                  <input matInput type="password" #password>
+                  <input matInput type="number" #password>
                 </mat-form-field>
                 <button 
                   mat-raised-button 
@@ -70,7 +77,6 @@
     </div>
   </mat-tab>
 
-
   <mat-tab label="Create Table">
     <div fxLayout="column" class="pad-all-md">
       <h3>Create Table</h3>
@@ -95,7 +101,7 @@
     
       <mat-form-field appearance="fill">
         <mat-label>Table Password</mat-label>
-        <input matInput type="password" [(ngModel)]="newGameForm.pass" min="0" max="9999">
+        <input matInput type="number" [(ngModel)]="newGameForm.pass" min="0" max="9999">
         <mat-hint>Only for private tables</mat-hint>
       </mat-form-field>
       <button mat-raised-button color="primary" (click)="createGame()" class="mrgn-t-md">
@@ -105,6 +111,42 @@
 
   </mat-tab>
 
+  <mat-tab label="History">
+    <div fxLayout="column">
+      <div class="mrgn-all-sm">
+        <b>
+          Review previously played games
+        </b> 
+      </div>
+      <table class="pad-all-md">
+        <tr>
+            <th>Name</th>
+            <th>Players</th>
+            <th>Created</th>
+            <th></th>
+        </tr>
+        <tr *ngFor="let game of historyGames">
+          <td>
+            {{ game.table_name ? game.table_name : 'Table '+game.id }}
+          </td>
+          <td>{{ game.num_players }}</td>
+          <td>{{ helpers.formatDate(game.created) }}</td>
+          <td>
+            <button mat-raised-button 
+              color="primary" 
+              (click)="renderFromHistory(game.id)">
+              Watch
+              <mat-icon>visibility</mat-icon>
+            </button>
+          </td>
+        </tr>
+      </table>
+
+
+
+
+    </div>
+  </mat-tab>
 </mat-tab-group>
 
 

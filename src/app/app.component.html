@@ -2,7 +2,13 @@
   [ngClass]="UI.boardCls" 
   class="dark-theme" style="height: 100vh;">
  
-  <!-- GAME INFORMATION MENU --------------------->
+  <!-- GAME RULES BUTTON ------------------------>
+
+  <button mat-icon-button (click)="openRulesDialog()" style="position: absolute;top: 10px;right: 10px">
+    <mat-icon>help</mat-icon>
+  </button>
+
+  <!-- CURRENT GAME INFORMATION MENU --------------------->
 
   <div style="position: absolute;top: 10px;left: 10px">
 
@@ -47,11 +53,10 @@
                    
                     <span 
                       *ngFor="let card of player.cards[continent.name]"
-                      style="display: inline-block;width: 25px;height: 30px;text-align: center;line-height: 30px;border-radius: 3px;cursor:pointer;" 
-                      class="animated zoomIn"
+                      class="player-menu-card animated zoomIn"
                       (click)="openCountryInfoDialog(card)"
                       [matTooltip]="board[card].verb"
-                      [ngClass]="continent.cls">
+                      [ngClass]="(board[card].building < 2) ? continent.cls : 'mat-grey-900'">
                       {{ board[card].verb | slice:0:2}}
                     </span>
 
@@ -75,13 +80,7 @@
       </div>
    
     </mat-menu>    
-  
-    <!-- <div *ngIf="!mainMenuTrigger.menuOpen">
-
-    </div> -->
-
-    
-  
+      
   </div>
 
   <!-- MONOPOLY BOARD -------------------------------->
@@ -92,6 +91,7 @@
       <tr *ngFor="let i of [0,1,2,3,4,5,6,7];">
         <td *ngFor="let j of [0,1,2,3,4,5,6,7];" 
         style="position: relative;"
+        (click)="openCountryInfoDialog(i+''+j)"
         [ngClass]="(board[i+''+j] && board[i+''+j].type === 'country') ? 'monopoly-cell' : ''"
         [style.background]="(board[i+''+j] && board[i+''+j].ownedBy > -1) ? players[board[i+''+j].ownedBy].areaBg : ''">
               
@@ -153,9 +153,6 @@
     <app-player *ngFor="let player of filterPlayers(players); index as i" 
       [cls]="players[i].cls" [bg]="players[i].color"  [playerCls]="'player-'+i">
     </app-player>
-    <!-- <app-player [cls]="players[1].cls" [bg]="players[1].color" [playerCls]="'player-1'"></app-player>
-    <app-player [cls]="players[2].cls" [bg]="players[2].color" [playerCls]="'player-2'"></app-player>   
-    <app-player [cls]="players[3].cls" [bg]="players[3].color" [playerCls]="'player-3'"></app-player>     -->
 
     <app-dice 
       (onDiceTotal)="movePlayer($event)"
@@ -165,11 +162,21 @@
       [canRoll]="UI.canRoll">
     </app-dice>
 
+    <!-- 
+    <div *ngIf="!gameInterval" style="position: absolute; top: 50%;margin-top: 10px; left: 50%; margin-left: -60px;" >
+      <button mat-raised-button color="primary" (click)="openEnterGameDialog()">
+        New Game
+        <mat-icon>casino</mat-icon>
+      </button>
+    </div> 
+    -->
+  
+
   </div>
 
 </div>
    
-<!-- CARD DIALOG -------------------------------->
+<!-- DIALOGS -------------------------------->
 
 <ng-template #cardTmpl>
   <div>
@@ -235,7 +242,7 @@
     <div style="font-size: 1.3em" class="mrgn-all-lg">
     {{UI.card.text}}
     </div>
-    <button mat-raised-button color="primary" (click)="this.doActionForChanceOrCommunity()">
+    <button mat-raised-button color="primary" (click)="helpers.closeAllDialogs()">
       OK
     </button>
   </div>
@@ -248,7 +255,7 @@
 </ng-template>
 
 <ng-template #countryInfoTmpl>
-<!-- {{UI.selectedBlock}} -->
+   <!-- {{UI.selectedBlock}} -->
 
   <div fxLayoutAlign="center center">
     <table class="my-table mrgn-t-lg">
@@ -300,23 +307,63 @@
     </table>
   </div> 
 
+  <div fxLayout="column" fxLayoutAlign="center center" class="pad-all-md">
+
+    <!-- [disabled]="myPlayerIndex !== game.currentPlayer" -->
+
+    <button mat-raised-button color="primary" [matMenuTriggerFor]="sellMenu">
+      Sell
+      <mat-icon>storefront</mat-icon>
+    </button>
+    <mat-menu #sellMenu="matMenu">
+      <div (click)="$event.stopPropagation()" class="pad-all-md">
+        <mat-form-field appearance="fill">
+          <mat-label>Starting auction amount</mat-label>
+          <input matInput type="number" #startAuctionAmount>
+        </mat-form-field>
+        <button mat-raised-button color="primary" (click)="beginAuction(startAuctionAmount.value)">
+          Begin Auction
+          <mat-icon>gavel</mat-icon>
+        </button>
+      </div>
+    </mat-menu>
+    
+
+
+    <div *ngIf="myPlayerIndex !== game.currentPlayer" class="mat-font-red">
+      You can build and sell an area, only when is your turn!
+    </div>
+  </div>
+
 
 </ng-template>
 
 <ng-template #enterGameTmpl>
-  <app-enter-game (onEnterGame)="enterGame($event)"></app-enter-game>
+  <app-enter-game 
+    (onEnterGame)="enterGame($event)"
+    (onRenderFromHistory)="renderFromHistory($event)">
+  </app-enter-game>
+</ng-template>
+
+<ng-template #gameRulesTmpl>
+
+  <app-game-rules 
+  [filteredBoard]="filteredBoard"
+  [railroads]="filteredRailroads"
+  [game]="game">
+
+  </app-game-rules>
+
+</ng-template>
+
+<ng-template #auctionTmpl>
+
 </ng-template>
 
 
-<!-- 
-<mat-form-field appearance="fill">
-  <mat-label>test</mat-label>
-  <input matInput type="text" [(ngModel)]="players[0].cls">
-</mat-form-field>
+<!--
+TODO
+Sell card 
 
-<mat-form-field appearance="fill">
-  <mat-label>Size</mat-label>
-  <input matInput type="number" [(ngModel)]="UI.size" step=".1">
-</mat-form-field>
- -->
+-->
 

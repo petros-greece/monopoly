@@ -4,6 +4,60 @@ html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 
 
+/**TABLES********************************************************/
+
+.my-table td{
+  padding: 5px;
+}
+
+
+.my-table-1 {
+	tr:first-child {
+		height: 50px;
+	}
+
+	td {
+		min-width: 70px;
+	}
+
+	th {
+		font-size: 1rem !important;
+		color: rgb(55, 71, 79);
+		font-weight: 700 !important;
+	}
+}
+
+.table-hover-row {
+	tr {
+		cursor: pointer;
+		transition: all 0.3s;
+	}
+	tr:hover {
+		background: #d7d7d7 !important;
+	}
+}
+
+.table-alter {
+	tr:nth-child(even) {
+		background: #eaeaea;
+	}
+}
+
+.table-left{
+  th, td{
+    text-align: left;
+  }
+}
+
+.table-center{
+  th, td{
+    text-align: center;
+  }
+}
+
+/***/
+
+
 @mixin calculatePlayerSize($player-width, $player-height){
   .player-rect {
     position: relative;
@@ -210,10 +264,6 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 .no-pointer-events{
   pointer-events: none;
   color: rgb(155, 155, 155);
-}
-
-.my-table td{
-  padding: 5px;
 }
 
 .dark-theme{

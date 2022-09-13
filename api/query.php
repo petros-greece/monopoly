@@ -31,18 +31,19 @@ function addPlayerToGame($gameId, $player, $pass){
 	$query = $conn->prepare("SELECT * FROM monopoly_game WHERE id = :gameId AND password = :pass");
 	$query->execute([ ":gameId" => $gameId, ":pass" => $pass ]);
 	$game = $query->fetch(PDO::FETCH_ASSOC);
+	if(!$game){
+		return json_encode(['error' => 'The password is not correct!!']);
+	}	
 	if($game['has_started'] === 1){
 		return json_encode(['error' => 'The table is already full!']);
 	}
-	if(count($game) === 0){
-		return json_encode(['error' => 'The password is not correct!!']);
-	}	
+
 	
 	$players = json_decode($game['players'], true);
 	array_push($players, $player);
 	$hasStarted = 0;
 	
-	if( count($players) === $game['num_players']){
+	if( count($players) === (int)$game['num_players']){
 		$hasStarted = 1;
 	}
 	
@@ -55,6 +56,8 @@ function addPlayerToGame($gameId, $player, $pass){
 	return json_encode( [
 		'hasStarted' => $hasStarted, 
 		'playerIndex' => (count($players)-1),
+		'count($players)' => count($players),
+		'$game[num_players]' => $game['num_players']
 	] );
 }
 
@@ -67,6 +70,15 @@ function getAvailableGames(){
 	$query = $conn->prepare("SELECT * FROM monopoly_game WHERE has_started = 0 
 	AND created >= :beforeNow LIMIT 10");
 	$query->execute([':beforeNow' => $beforeNow]);
+	$games = $query->fetchAll(PDO::FETCH_ASSOC);
+	return json_encode($games, JSON_NUMERIC_CHECK);
+}
+
+function getGames($limit, $offset){
+	global $conn;	
+	$query = $conn->prepare("SELECT * FROM monopoly_game WHERE has_started = 1 
+	ORDER BY id DESC LIMIT $limit OFFSET $offset");
+	$query->execute();
 	$games = $query->fetchAll(PDO::FETCH_ASSOC);
 	return json_encode($games, JSON_NUMERIC_CHECK);
 }
@@ -102,6 +114,8 @@ function getGameEvents($gameId, $lastSeenEventId){
 }
 
 
+
+
 if( $requestMethod === 'POST' ){
 
   $data = json_decode(file_get_contents('php://input'));
@@ -135,8 +149,12 @@ if( $requestMethod === 'GET' ){
 	}
 	else if( isset( $_GET['lastSeenEventId'] ) ){
 		echo getGameEvents($_GET['gameId'], $_GET['lastSeenEventId']);
+		exit();
 	}	
-	
+	else if( isset( $_GET['historyGames'] ) ){
+		echo getGames($_GET['limit'], $_GET['offset']);
+		exit();
+	}		
 	
 
 	

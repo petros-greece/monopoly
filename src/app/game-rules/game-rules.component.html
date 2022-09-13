@@ -1,0 +1,77 @@
+<div *ngIf="filteredBoard" style="height: 80vh;" class="my-scroll">
+
+  <mat-tab-group>
+
+    <mat-tab label="General Rules">
+      
+      <mat-list role="list" style="text-align:left;">
+        <mat-list-item role="listitem">
+          Each player starts with {{game.initMoney}} €.
+        </mat-list-item>
+        <mat-list-item role="listitem">
+          When you buy an area you can directly build on it in your turn, 
+          by pressing the area on the board or the corresponding card from the left menu.
+        </mat-list-item>
+        <mat-list-item role="listitem">
+          When you roll doubles you play again.
+        </mat-list-item>
+        <mat-list-item role="listitem">
+          When you pass the start you gain {{game.passFromStartMoney}} €.
+        </mat-list-item>
+        <mat-list-item role="listitem">
+          If a player possess both the train stations the trip cost is doubled for both of them.
+        </mat-list-item>  
+        <mat-list-item role="listitem">
+          You loose when you have no money left. All your capital is reclaimed by the bank.
+        </mat-list-item> 
+        <mat-list-item role="listitem">
+          If you go to jail you miss one turn.
+        </mat-list-item>
+        <mat-list-item role="listitem">
+          You can avoid taking the risk to play at the casino.
+        </mat-list-item>   
+      </mat-list>
+
+    </mat-tab>
+    <mat-tab label="Countries">
+      <table class="my-table my-table-1 table-center">
+        <tr>
+          <th>Country</th>
+          <th>Cost</th>
+          <th>Rent</th>
+          <th>House</th>    
+          <th>Skyscraper</th>    
+        </tr>
+        <tr *ngFor="let square of filteredBoard">
+          <td [ngClass]="square.cls">{{square.verb}}</td>
+          <td>{{square.cost}}</td>
+          <td>{{square.rents[0]}}</td>
+          <td>cost: {{square.buildCosts[1]}} <br>rent: {{square.rents[1]}} </td>
+          <td>cost: {{square.buildCosts[2]}} <br>rent: {{square.rents[2]}}</td>
+        </tr>
+      </table>
+    </mat-tab>
+    <mat-tab label="Railroads">
+      <table class="my-table my-table-1 table-left pad-all-md">
+        <tr>
+          <th>Name</th>
+          <th>Cost</th>
+          <th>Trip Cost</th>
+        </tr>
+        <tr *ngFor="let railroad of railroads">
+          <td>{{ railroad.verb }}</td>
+          <td>{{ railroad.cost }}</td>
+          <td>{{ railroad.tripCost }}</td>
+        </tr>
+      </table>
+      <em class="mat-font-red mrgn-t-lg">
+        *If the same player owns all stations, the trip cost for each of them will be doubled.
+      </em>      
+    </mat-tab>
+  </mat-tab-group>
+
+
+
+
+
+</div> 

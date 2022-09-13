@@ -15,6 +15,7 @@ import { SlotMachineComponent } from './slot-machine/slot-machine.component';
 import { EnterGameComponent } from './enter-game/enter-game.component';
 
 import { GamePipesModule } from './pipes/game-pipes.module';
+import { GameRulesComponent } from './game-rules/game-rules.component';
 
 @NgModule({
   declarations: [
@@ -23,7 +24,8 @@ import { GamePipesModule } from './pipes/game-pipes.module';
     PlayerComponent,
     BuildingComponent,
     SlotMachineComponent,
-    EnterGameComponent
+    EnterGameComponent,
+    GameRulesComponent
   ],
   imports: [
     BrowserModule,

@@ -10,13 +10,16 @@ import { MonopolyService } from '../service/monopoly-api.service';
 export class EnterGameComponent implements OnInit , OnDestroy{
 
   @Output("onEnterGame") public onEnterGame: EventEmitter<any> = new EventEmitter<any>();
+  @Output("onRenderFromHistory") public onRenderFromHistory: EventEmitter<any> = new EventEmitter<any>();
 
+
+  //onRenderFromHistory
   availTablesInterval: any;
 
   newGameForm = {
     name: '',
     numOfPlayers: 2,
-    pass: '',
+    pass:<any> '',
     tableName: ''
   };
 
@@ -26,6 +29,7 @@ export class EnterGameComponent implements OnInit , OnDestroy{
 
   selectedIndex = 0;
   availableGames: any;
+  historyGames: any;
 
   constructor(
     public helpers: HelpersService,
@@ -34,9 +38,7 @@ export class EnterGameComponent implements OnInit , OnDestroy{
 
   async ngOnInit() {
     await this.checkAvailableGames();
-    this.availTablesInterval = setInterval(async() => {
-      await this.checkAvailableGames();
-    }, 3000);
+    await this.checkAvailTablesInterval();
 
   }
 
@@ -44,17 +46,26 @@ export class EnterGameComponent implements OnInit , OnDestroy{
     clearInterval(this.availTablesInterval);
   }
 
-
+  async checkAvailTablesInterval(){
+    this.availTablesInterval = setInterval(async() => {
+      await this.checkAvailableGames();
+    }, 3000);
+  }
 
   async checkAvailableGames(){
     let games = await this.apiService.getAvailableGames();
-    this.availableGames = games.map((game) => {
+    let mappedGames = games.map((game) => {
       game.players = JSON.parse(game.players);
       return game;
     });
+    this.availableGames = mappedGames;
   }
 
   async createGame(){
+    if(this.newGameForm.pass && (this.newGameForm.pass > 9999)){
+      this.helpers.showToastrError('The password cannot be larger than 4 digits!');
+      return;
+    }
 
     if(!this.newGameForm.name){
       this.helpers.showToastrError('You name is required!');
@@ -72,5 +83,27 @@ export class EnterGameComponent implements OnInit , OnDestroy{
     let res = await this.apiService.addPlayerToGame(this.enterGameForm.name, game.id, pass);
     this.onEnterGame.emit({gameId: game.id, playerIndex: res.playerIndex });
   }
+
+  togglePassMenu(openOrClose:string){
+    if(openOrClose === 'open'){
+      clearInterval(this.availTablesInterval);
+    }
+    else{
+      this.checkAvailTablesInterval();
+    }
+  }
+
+  async onTabChange(event:any){
+    console.log(event.index);
+    if(event.index === 2 && !this.historyGames){
+      this.historyGames = await this.apiService.getHistoryGames(0, 10);
+    }
+
+  }
+
+  renderFromHistory(gameId: number){
+    this.onRenderFromHistory.emit({gameId: gameId });
+  }
+
 
 }

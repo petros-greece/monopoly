@@ -162,11 +162,19 @@
 .monopoly-cell{
   cursor: pointer;
 }
-.monopoly-cell:hover{
-  background: rgba(255, 255, 0, .3) !important;
+// .monopoly-cell:hover{
+//   background: rgba(255, 255, 0, .3) !important;
+// }
+
+.player-menu-card{
+  display: inline-block;
+  width: 25px;
+  height: 30px;
+  text-align: center;
+  line-height: 30px;
+  border-radius: 3px;
+  cursor:pointer;
 }
-
-
 
 
 .cell-info-popup{
