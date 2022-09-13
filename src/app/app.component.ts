@@ -85,7 +85,7 @@ export class AppComponent implements OnInit{
     turnEvents: false
   };
 
-  turnEmitedEvents = [];
+
   myPlayerIndex: number;
 
   lastEmittedEventId = 0;
@@ -380,12 +380,6 @@ export class AppComponent implements OnInit{
     }
   }
 
-  private closeGameRelatedDialogs(){
-    this.helpers.closeDialogById('buyBlockDialog');
-    this.helpers.closeDialogById('chestAndChanceDialog');
-    this.helpers.closeDialogById('CasinoDialog');
-  }
-
   //Emitted after the next button clicked and also when the time ends
   async nextTurn(){
       //console.log('Change Turn');
@@ -443,13 +437,12 @@ export class AppComponent implements OnInit{
       let blockKey = this.UI.blocks[player.position];
       let block = this.board[blockKey];
       //owned by other player
-      if( block.ownedBy > -1 && block.ownedBy !== playerIndex){
+      if((block.ownedBy > -1) && (block.ownedBy !== playerIndex)){
         (block.type === 'country') ? this.payRentForCountry(block, player, blockKey) :
                                     this.payRentForRailroad(block, player, blockKey);
       }
     }
   }
-
 
   //emitted
   async movePlayer(e: any){
@@ -480,7 +473,7 @@ export class AppComponent implements OnInit{
     }
     
     //move Interval
-    this.playerInterval = setInterval(()=>{
+    this.playerInterval = setInterval(() => {
       player.position+=1;
       //reached the start
       if( player.position > 27){
@@ -503,7 +496,6 @@ export class AppComponent implements OnInit{
         }
       }
     }, this.timers.myPlayerMove);
-
   }
 
   private async emitEvent(info:any){
@@ -515,7 +507,6 @@ export class AppComponent implements OnInit{
     this.lastEmittedEventId = e.id; 
   }
 
-
   /** BLOCK SPECIFIC ACTIONS *****************/
 
   //emitted from cards
@@ -526,7 +517,6 @@ export class AppComponent implements OnInit{
     player.cls = this.UI.playerClsPrefix+'07';
     player.position = 7;
     player.looseNextTurn = true;
-    this.turnEmitedEvents.push( { jail: true } );
   }
 
   private async openChestAndChanceDialog(){
@@ -556,8 +546,8 @@ export class AppComponent implements OnInit{
     let len = this.players.length;
     let money = card.money ? card.money : this.UI.card.money;
     let current = playerIndex > -1 ? playerIndex : this.game.currentPlayer;
-    for(let i=0; i < len; i+=1){
-      if(i !== current && this.players[i].isActive){
+    for( let i = 0; i < len; i +=1 ){
+      if( i !== current && this.players[i].isActive ){
         this.players[i].money-= money;
         this.players[current].money+= money;
       }
@@ -617,7 +607,7 @@ export class AppComponent implements OnInit{
     else if(type === 'getPaid'){
       this.collectFromChanceOrCommunity(card, playerIndex);
     }
-    this.turnEmitedEvents.push({card: this.UI.card});
+
     if(playerIndex === -1){
       await this.emitEvent({card: this.UI.card});
     }
